@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Homepage";
 import AdminDashboard from "./pages/AdminDashboard";
-import StudentForm from "./pages/studentForm";
+import StudentForm from "./pages/StudentForm";
 import "./index.css";
 
 
