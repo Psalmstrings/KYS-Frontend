@@ -4,6 +4,223 @@
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
+/* HERO */
+.hero {
+  position: relative;
+  height: 80vh;
+  background: url("./assets/WhatsApp\ Image\ 2026-02-05\ at\ 2.35.01\ PM.jpeg") center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.89);
+}
+
+.hero-content {
+  position: relative;
+  text-align: center;
+  color: white;
+  max-width: 700px;
+  padding: 20px;
+}
+
+.hero-content h1 {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.hero-content p {
+  margin: 15px 0;
+  font-size: 18px;
+}
+
+.hero-btn {
+  background: #095716;
+  padding: 12px 25px;
+  border-radius: 8px;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.hero-btn:hover {
+  background: #095716;
+}
+
+
+/* SECTION WRAPPER */
+section {
+  padding: 60px 8%;
+}
+
+/* ABOUT */
+.about {
+  text-align: center;
+}
+
+.about h2 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+
+/* VISION / MISSION */
+.vision-mission {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.vm-card {
+  background: white;
+  padding: 25px;
+  width: 45%;
+  min-width: 280px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.vm-card h3 {
+  margin-bottom: 10px;
+  color: #095716;
+}
+
+
+/* NEWS SECTION */
+.news h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.news-container {
+  text-align: center;
+}
+
+.news-card {
+  background: #f8faff;
+  border-left: 50px solid #095716;
+  padding: 18px;
+  width: 100%;
+  min-width: 280px;
+  border-radius: 8px;
+  font-size: 20px;
+}
+/* Button */
+.register-btn {
+  background: #095716;
+  color: #ffffff;
+  border: none;
+  margin-top: 20px;
+  padding: 0.8rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.register-btn:hover {
+  transform: translateY(-3px);
+  background-color: #09b625;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+}
+
+
+/* GALLERY */
+.gallery h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.gallery-grid img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+
+/* EXECUTIVES */
+.executives h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.exec-container {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+.exec-card {
+  text-align: center;
+  background: white;
+  padding: 20px;
+  width: 260px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.exec-card img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+/* CONTACT */
+.contact {
+  text-align: center;
+}
+
+.contact-btn {
+  background: #2563eb;
+  padding: 14px 30px;
+  display: inline-block;
+  margin-top: 10px;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+/* FOOTER */
+.footer {
+  background: #111;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 28px;
+  }
+
+  .vision-mission {
+    flex-direction: column;
+  }
+
+  .news-container {
+    flex-direction: column;
+  }
+}
+
 /* Full page container */
 /* Container and background */
 .home-container {
@@ -369,3 +586,82 @@
   }
 }
 
+/* Reset some default styling */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* Center the login container */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 120vh;
+  background: rgb(177, 174, 174);
+  margin-top: -200px;
+  padding: 0;
+}
+
+/* Login box styling */
+.login-box {
+  background: #f0f2f5;;
+  padding: 40px 30px;
+  border-radius: 10px;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+  width: 350px;
+  text-align: center;
+  height: 50%;
+}
+
+.login-box h2 {
+  margin-bottom: 25px;
+  color: #333;
+}
+
+/* Input group styling */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+  font-weight: bold;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.input-group input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Login button */
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #007bff;
+  color: white;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-btn:hover {
+  background: #0056b3;
+}

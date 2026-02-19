@@ -1,16 +1,33 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Make sure you're using react-router
 import "../index.css";
 
 const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // For redirecting
 
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // Or sessionStorage
+    if (!token) {
+      // Redirect to login if not authenticated
+      navigate("/login"); // Change to your login route
+    } else {
+      fetchStudents();
+    }
+  }, []);
 
   // Fetch all students from backend
   const fetchStudents = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/students`);
+      const res = await fetch(`${API_URL}/api/students`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (!res.ok) throw new Error("Failed to fetch students");
       const data = await res.json();
       setStudents(data);
@@ -21,14 +38,19 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchStudents();
-  }, []);
+  // Sign out function
+  
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   return (
     <div className="admin-container">
       <h1 className="dashboard-title">Admin Dashboard</h1>
+      <button onClick={handleSignOut} className="signout-btn">
+          Sign Out
+        </button>
       <p className="dashboard-desc">List of all registered students.</p>
 
       <div className="table-container">
