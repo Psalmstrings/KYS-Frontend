@@ -19,11 +19,7 @@ function App() {
         <Route path="/register" element={<StudentForm />} />
         <Route path="/login" element={<AdminLogin />} />
 
-        
-        <Route element={<ProtectedRoute />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-        </Route>
-
+        <Route path="/admin/" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path='*' element={<NotFound />} />
       </Routes>
 
