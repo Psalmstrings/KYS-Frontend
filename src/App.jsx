@@ -13,7 +13,7 @@ function App() {
   return (
     
     <Router>
-      <Toaster position="top-right" richColors />
+     
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<StudentForm />} />
@@ -25,6 +25,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </ProtectedRoute>
+       <Toaster position="top-right" richColors />
     </Router>
     
   );

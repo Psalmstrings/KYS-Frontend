@@ -1,5 +1,6 @@
 import React from "react";
 import "../index.css";
+import nansLogo from "../assets/download__4_-removebg-preview.png";
 
 const Homepage = () => {
   return (
@@ -9,7 +10,7 @@ const Homepage = () => {
       <section className="hero">
         <div className="hero-overlay"></div>
         <div className="hero-content">
-          <img src="./assets/download__4_-removebg-preview.png" alt="Hero Image" />
+          <img src={nansLogo} alt="Hero Image" />
           <h1>NANS SouthWest — ZONE-D</h1>
           <h2>Office of the Public Relation Officer</h2>
           <p>Promoting Transparency, Engagement & Effective Communication</p>
@@ -23,7 +24,7 @@ const Homepage = () => {
 
       {/* ABOUT SECTION */}
       <section className="about">
-        <h2>About The PRO Office</h2>
+        <h2>The PRO</h2>
         <p>
           The Public Relations Office serves as the communication gateway in the entire SOUTHWEST student community. We ensure 
           that vital information is clear, timely, and accessible to everyone.
@@ -119,7 +120,7 @@ const Homepage = () => {
       </section>
 
       <footer className="footer">
-        © {new Date().getFullYear()} NANS SOUTHWEST — PRO Office.
+        © {new Date().getFullYear()} NANS SOUTHWEST — Office of the PRO.
       </footer>
 
     </div>
