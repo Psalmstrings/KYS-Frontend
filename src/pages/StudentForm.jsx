@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import "../index.css";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
 
 const StudentForm = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +23,7 @@ const StudentForm = () => {
 
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false); // <-- FIXED
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,8 +57,11 @@ const StudentForm = () => {
       });
 
       if (res.ok) {
-        setMessage("Registration Successful!");
+        // setMessage("Registration Successful!");
+        toast.success("Registration successful! Welcome to the KYS family."); // <-- SUCCESS TOAST
         setIsError(false); // SUCCESS
+        
+        navigate("/"); // Redirect to homepage after successful registration
 
         setFormData({
           fullName: "",
@@ -79,7 +86,7 @@ const StudentForm = () => {
 
     } catch (error) {
       console.error("Error:", error);
-      setMessage("Server error!");
+      setMessage(error.message || "An error occurred. Please try again.");
       setIsError(true); // ERROR
     }
   };
@@ -89,16 +96,6 @@ const StudentForm = () => {
   <div className="form-container">
     <h1 className="form-title">Student Registration Form</h1>
     <p className="form-desc">Fill in your details correctly.</p>
-
-    {message && (
-      <p
-        className={`form-message ${
-          isError ? "error-message" : "success-message"
-        }`}
-      >
-        {message}
-      </p>
-    )}
 
     <form className="student-form" onSubmit={handleSubmit}>
       <div className="grid-2">
@@ -173,8 +170,16 @@ const StudentForm = () => {
             <option>Yes</option>
           </select>
         </div>
-      </div>
-
+      </div><br />
+      {message && (
+      <p
+        className={`form-message ${
+          isError ? "error-message" : "success-message"
+        }`}
+      >
+        {message}
+      </p>
+    )}
       <button type="submit" className="submit-btn">Submit</button>
     </form>
   </div>
