@@ -3,6 +3,10 @@ import "../index.css";
 import ideological from "../assets/WhatsApp Image 2026-02-05 at 2.35.01 PM.jpeg"; // Add actual ideological image here
 import nansLogo from "../assets/download__4_-removebg-preview.png";
 import proImage from "../assets/IMG_2842.JPG"; // Add actual PRO image here
+import osunPro from "../assets/COMR IBRAHEEM.jpeg"; // Add actual Osun PRO image here
+import osunPro2 from "../assets/Comrade Ridwan.jpeg"; // Add actual Osun PRO image here
+import osunPro3 from "../assets/COMRADE. ADEYANJU.jpeg"; // Add actual Osun PRO image here
+import osunPro4 from "../assets/JOHNPAU.jpeg"; // Add actual Osun PRO image here
 
 const Homepage = () => {
   return (
@@ -44,19 +48,16 @@ const Homepage = () => {
           
           <div className="pro-text">
             <h3>Comr. Tope Olugbemi</h3>
+            <h4>(Celebrity Surveyor)</h4><br />
             <p>
               <span>A Voice, A Vision, A Responsibility </span><br />
-              Comrade Tope Olugbemi is a new-generation leader driven by responsibility, integrity, and measurable impact. Known as the “Celebrity Surveyor,” he embodies precision, structure, and foresight — qualities that define both his profession and his leadership style.
+              Comrade Tope Olugbemi is a young leader known for responsibility, integrity, and a clear sense of purpose. Popularly called the “Celebrity Surveyor,” he brings precision, structure, and forward thinking into both his profession and his leadership.
 
-              Tope’s philosophy is simple: leadership is not a title but a burden carried for the benefit of others. He prioritizes value over visibility, choosing strategic thinking, accountability, and principled action even under pressure.
+              Tope believes leadership is more than a title. To him, it is a responsibility to serve others and create real value. His approach focuses on accountability, thoughtful decisions, and staying committed to doing what is right even under pressure.
 
-              A firm believer that Nigeria can work — by responsibility, not by chance, he champions youth ownership in governance, enterprise, and national development. His advocacy bridges student leadership with economic empowerment, ensuring young people are not just vocal, but relevant and equipped.
+              He is a strong advocate for youth participation in governance, enterprise, and national development. Through his work, he encourages young people not only to speak up but also to be prepared, capable, and relevant in shaping the future.
 
-              Integrity is Tope’s strongest currency. In a system where shortcuts are common, he stands out for consistency, credibility, and character. As a communicator, he engages difficult conversations with clarity, diplomacy, and purposeful vision.
-
-              Tope sees leadership as stewardship — a trust to strengthen institutions and shape lasting impact. His journey continues, but his mission remains clear: responsibility over popularity, substance over noise, legacy over applause.
-
-              He represents a generation determined not to inherit excuses, but to build solutions.
+              Known for his consistency and character, Tope Olugbemi represents a generation determined to move beyond excuses and focus on building practical solutions for society.
             </p>
           </div>
         </div>
@@ -98,13 +99,31 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* GALLERY */}
-      <section className="gallery">
-        <h2>Media Gallery</h2>
-        <div className="gallery-grid">
-          <img src={nansLogo} alt="gallery" />
-          <img src={ideological} alt="gallery" />
-          {/* <img src={proImage} alt="gallery" /> */}
+      
+
+      <section className="media">
+        <h2>Media Team</h2>
+        <div className="media-grid">
+          <div className="media-card">
+            <img src={osunPro} alt="" />
+            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
+            <h6>NANS PRO OSUN</h6>
+          </div>
+          <div className="media-card">
+            <img src={osunPro2} alt="" />
+            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
+            <h6>NANS PRO OSUN</h6>
+          </div>
+          <div className="media-card">
+            <img src={osunPro3} alt="" />
+            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
+            <h6>NANS PRO OSUN</h6>
+          </div>
+          <div className="media-card">
+            <img src={osunPro4} alt="" />
+            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
+            <h6>NANS PRO OSUN</h6>
+          </div>
         </div>
       </section>
 
@@ -132,6 +151,16 @@ const Homepage = () => {
             Submit Complaint
           </button>
         </form>
+      </section>
+
+      {/* GALLERY */}
+      <section className="gallery">
+        <h2>Media Gallery</h2>
+        <div className="gallery-grid">
+          <img src={nansLogo} alt="gallery" />
+          <img src={ideological} alt="gallery" />
+          {/* <img src={proImage} alt="gallery" /> */}
+        </div>
       </section>
 
       <footer className="footer">

@@ -147,7 +147,7 @@ section {
 }
 
 .gallery-grid img {
-  width: 100%;
+  width: 40%;
   border-radius: 10px;
 }
 
@@ -215,6 +215,10 @@ section {
   .vision-mission {
     flex-direction: column;
   }
+  .vm-card {
+    width: 100%;
+  }
+  
 
   .news-container {
     flex-direction: column;
@@ -696,8 +700,8 @@ section {
 
 .pro-img {
   width: 260px;
-  height: 260px;
-  border-radius: 50%;
+  height: 120%;
+  /* border-radius: 50%; */
   object-fit: cover;
   border: 4px solid #095716;
 }
@@ -705,13 +709,22 @@ section {
 .pro-text {
   text-align: left;
   max-width: 500px;
+  justify-content: center;
 }
 
 .pro-text h3 {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   margin-bottom: 15px;
   font-weight: 700;
   color: #1a1a1a;
+}
+
+.pro-text h4 {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: -10px;
 }
 
 .pro-text p {
@@ -789,5 +802,76 @@ section {
 @media (max-width: 500px) {
   .contact-form input, .contact-form textarea {
     font-size: 0.95rem;
+  }
+}
+
+.media {
+  padding: 60px 20px;
+  text-align: center;
+  background: #f9f9f9;
+}
+
+.media h2 {
+  font-size: 32px;
+  margin-bottom: 40px;
+  font-weight: 700;
+}
+
+/* Grid Layout */
+.media-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+/* Card */
+.media div {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
+}
+
+.media div:hover {
+  transform: translateY(-5px);
+}
+
+/* Image */
+.media img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+/* Name */
+.media h3 {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+/* Title */
+.media h6 {
+  font-size: 14px;
+  color: #777;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .media-grid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media h2 {
+    font-size: 26px;
   }
 }
