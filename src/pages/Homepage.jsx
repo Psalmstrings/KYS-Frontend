@@ -107,22 +107,22 @@ const Homepage = () => {
           <div className="media-card">
             <img src={osunPro} alt="" />
             <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
-            <h6>NANS PRO OSUN</h6>
+            <h6>PRO, NANS JCC OSUN</h6>
           </div>
           <div className="media-card">
             <img src={osunPro2} alt="" />
-            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
-            <h6>NANS PRO OSUN</h6>
+            <h3>COMRADE RIDWAN AJAYI</h3>
+            <h6>PRO, NANS JCC LAGOS</h6>
           </div>
           <div className="media-card">
             <img src={osunPro3} alt="" />
-            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
-            <h6>NANS PRO OSUN</h6>
+            <h3>JOHNPAUL OLAMAKINDE ALABI (MAKINS)</h3>
+            <h6>PRO, NANS JCC ONDO</h6>
           </div>
           <div className="media-card">
             <img src={osunPro4} alt="" />
-            <h3>COMR IBRAHEEM AYOMIDE ALABI (PKA: IB POL)</h3>
-            <h6>NANS PRO OSUN</h6>
+            <h3>COMRADE. ADEYANJU JOSHUA (ANIYIKAYE)</h3>
+            <h6>PRO, NANS JCC OYO</h6>
           </div>
         </div>
       </section>
