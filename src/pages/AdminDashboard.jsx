@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // Make sure you're using react-router
-import "../index.css";
+import "../styles/admindash.css";
 
 const AdminDashboard = () => {
   const [students, setStudents] = useState([]);

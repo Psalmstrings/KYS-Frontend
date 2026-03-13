@@ -95,16 +95,16 @@ section {
 
 
 /* NEWS SECTION */
-.news h2 {
+.kys h2 {
   text-align: center;
   margin-bottom: 25px;
 }
 
-.news-container {
+.kys-container {
   text-align: center;
 }
 
-.news-card {
+.kys-card {
   background: #f8faff;
   border-left: 50px solid #095716;
   padding: 18px;
@@ -590,13 +590,6 @@ section {
   }
 }
 
-/* Reset some default styling */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
-}
 
 /* Center the login container */
 .login-container {
@@ -873,5 +866,225 @@ section {
 
   .media h2 {
     font-size: 26px;
+  }
+}
+
+/* Nav Links */
+/* Navbar */
+.navbar-section {
+  width: 100%;
+  
+  /* color: #111; */
+  padding: -100px;
+}
+.navbar {
+  width: 100%;
+  background: #095716;
+  color: #fff;
+  position: sticky;
+  padding: 15px 20px;
+  /* top: 10px; */
+  z-index: 1000;
+  /* margin: -100; */
+  font-family: 'Poppins', sans-serif;
+}
+
+.navbar-container {
+  /* max-width: 1200px; */
+  /* margin: auto; */
+  display: flex;
+  justify-content: space-between;
+  /* align-items: center; */
+  /* padding: 0.5rem 1rem; */
+  gap: 30%;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.logo img {
+  height: 50px;
+  margin-right: 0.5rem;
+}
+
+.logo span {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+}
+
+.nav-links li a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.nav-links li a:hover {
+  color: #ffd700;
+}
+
+/* Hamburger Menu */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+}
+
+.hamburger span {
+  height: 3px;
+  width: 25px;
+  background: #fff;
+  border-radius: 2px;
+}
+
+/* Mobile Responsiveness */
+@media screen and (max-width: 768px) {
+  .nav-links {
+    position: fixed;
+    right: -100%;
+    top: 0;
+    /* height: 100%; */
+    width: 100%;
+    background: rgba(0, 50, 120, 0.95);
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 2rem;
+    transition: right 0.3s ease;
+  }
+
+  .nav-links.active {
+    right: 0;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+}
+
+/* About Us Page Styles */
+.about-hero {
+  background: rgba(0, 50, 120, 0.95);
+  color: #fff;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.about-hero .about-logo {
+  height: 80px;
+  margin-bottom: 1rem;
+}
+
+.about-hero h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.about-hero p {
+  max-width: 700px;
+  margin: auto;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Mission & Vision Section */
+.about-mv {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 3rem 1rem;
+  background: #f4f4f4;
+}
+
+.mv-card {
+  flex: 1 1 300px;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.mv-card h2 {
+  color: #003278;
+  margin-bottom: 1rem;
+}
+
+/* Ideology Section */
+.about-ideology {
+  padding: 3rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.ideology-content img {
+  width: 300px;
+  border-radius: 8px;
+}
+
+.ideology-text {
+  max-width: 600px;
+}
+
+.ideology-text h2 {
+  color: #003278;
+  margin-bottom: 1rem;
+}
+
+.ideology-text p {
+  line-height: 1.6;
+}
+
+/* History Section */
+.about-history {
+  padding: 3rem 1rem;
+  background: #fff;
+  max-width: 900px;
+  margin: auto;
+  text-align: center;
+}
+
+.about-history h2 {
+  color: #003278;
+  margin-bottom: 1rem;
+}
+
+.about-history p {
+  line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+  background: #003278;
+  color: #fff;
+  padding: 2rem 1rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .about-mv {
+    flex-direction: column;
+  }
+  .about-ideology {
+    flex-direction: column;
+    text-align: center;
+  }
+  .ideology-content img {
+    width: 80%;
   }
 }

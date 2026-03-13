@@ -1,0 +1,369 @@
+/* ==========================================
+   ABOUT US PAGE - INTERACTIVE & ANIMATED CSS
+========================================== */
+
+/* VARIABLES */
+:root {
+  --primary-color: #0f6e24;;        /* Neon green */
+  --secondary-color: #0a0a0a;      /* Dark background */
+  --light-text: #f8f8f8;
+  --muted-text: #b5b5b5;
+  --transition: 0.4s ease;
+}
+
+/* GLOBAL RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  /* background-color: var(--secondary-color); */
+  color: var(--light-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* =============================
+   ANIMATIONS
+============================= */
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px);}
+  100% { opacity: 1; transform: translateY(0);}
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(50px);}
+  100% { opacity: 1; transform: translateY(0);}
+}
+
+@keyframes zoomIn {
+  0% { opacity: 0; transform: scale(0.85);}
+  100% { opacity: 1; transform: scale(1);}
+}
+
+@keyframes float {
+  0% { transform: translateY(0);}
+  50% { transform: translateY(-20px);}
+  100% { transform: translateY(0);}
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 10px var(--primary-color); }
+  50% { box-shadow: 0 0 25px var(--primary-color); }
+}
+
+/* =============================
+   HERO SECTION
+============================= */
+.hero-section{
+    background-color: #ecffef;
+    color: #0f6e24;
+}
+/* FLOATING SHAPES */
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(5px);
+  opacity: 1.5;
+  animation: float 12s infinite ease-in-out,
+             rotate 20s infinite linear,
+             pulse 6s infinite ease-in-out;
+  z-index: 1;
+}
+
+.shape1 {
+  width: 180px;
+  height: 180px;
+  background: #4e5bff;
+  top: 100px;
+  right: 50px;
+  animation-delay: 0s, 0s, 0s;
+}
+
+.shape2 {
+  width: 120px;
+  height: 120px;
+  background: #ff7bc0;
+  top: 100px;
+  left: 600px;
+  animation-delay: 2s, 4s, 1s;
+}
+
+.shape3 {
+  width: 80px;
+  height: 80px;
+  background: #46b3d4;
+  top: 250px;
+  right: 400px;
+   animation-delay: 1s, 2s, 3s;
+}
+.shape4 {
+  width: 100px;
+  height: 100px;
+  background: #0f6e24;
+  top: 300px;
+  right: 200px;
+  animation-delay: 3s, 1s, 2s;
+}
+
+@keyframes float {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(40px, -35px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Slow rotation for depth */
+@keyframes rotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Soft fading in and out */
+@keyframes pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.9; }
+}
+
+.hero-mock {
+  width: 45%;
+  display: flex;
+  justify-content: center;
+}
+
+.mock-card {
+  width: 320px;
+  padding: 25px;
+  background: rgba(255,255,255,.6);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  animation: float 3s ease-in-out infinite;
+}
+
+.role {
+  margin-bottom: 10px;
+  color: #444;
+}
+
+
+.hero-text {
+  text-align: center;
+}
+
+.hero-logo {
+  width: 120px;
+  margin-bottom: 20px;
+  animation: zoomIn 1.4s ease forwards;
+}
+
+
+/* =============================
+   CORE IDEALS (Mission / Vision / Values)
+============================= */
+.about-mv {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  animation: slideUp 1s ease forwards;
+}
+
+.section-subtext {
+  font-size: 1.1rem;
+  color: var(--muted-text);
+  margin-bottom: 50px;
+  animation: slideUp 1.2s ease forwards;
+}
+
+.mv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.mv-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 16px;
+  transition: var(--transition);
+  animation: fadeIn 1s ease forwards;
+}
+
+.mv-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(179,255,0,0.25);
+  border: 1px solid var(--primary-color);
+}
+
+.mv-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: var(--primary-color);
+}
+
+.mv-card p {
+  font-size: 1rem;
+  color: var(--light-text);
+}
+
+/* =============================
+   IDEOLOGY SECTION
+============================= */
+.ideology-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 20px;
+  gap: 40px;
+}
+
+.ideology-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 40px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.ideology-img {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 16px;
+  animation: zoomIn 1.2s ease forwards;
+}
+
+.ideology-text h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.ideology-text p {
+  color: var(--light-text);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+/* =============================
+   HISTORY SECTION
+============================= */
+.history-section {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.history-text {
+  max-width: 900px;
+  margin: 20px auto 0;
+  font-size: 1.1rem;
+  color: var(--light-text);
+  line-height: 1.7;
+}
+
+/* =============================
+   MEDIA TEAM
+============================= */
+.media-team {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.media-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  transition: var(--transition);
+  overflow: hidden;
+  animation: fadeIn 1s ease forwards;
+}
+
+.media-card img {
+  width: 100%;
+  border-radius: 16px;
+  margin-bottom: 15px;
+  animation: zoomIn 1.2s ease forwards;
+}
+
+.media-card h3 {
+  font-size: 1.25rem;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+
+.media-card h6 {
+  font-size: 0.95rem;
+  color: var(--muted-text);
+}
+
+/* Hover Effects for Media */
+.media-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 10px 30px rgba(179,255,0,0.3);
+  border: 1px solid var(--primary-color);
+}
+
+/* =============================
+   FOOTER
+============================= */
+.footer {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted-text);
+  background: #0a0a0a;
+  animation: fadeIn 1.2s ease forwards;
+}
+
+/* =============================
+   SHAPES / FLOATING BACKGROUND (OPTIONAL)
+============================= */
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(179,255,0,0.18), transparent 70%);
+  filter: blur(60px);
+  opacity: 0.55;
+  animation: float 12s infinite ease-in-out,
+             rotate 20s infinite linear,
+             pulse 6s infinite ease-in-out;
+  z-index: 1;
+}
+
+/* =============================
+   RESPONSIVE DESIGN
+============================= */
+@media (min-width: 900px) {
+  .hero-grid, .ideology-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    text-align: left;
+  }
+  .hero-text, .ideology-text { text-align: left; }
+}
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 2.5rem; }
+  .section-title { font-size: 2rem; }
+  .hero-description { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 2rem; }
+  .hero-description { font-size: 0.95rem; }
+  .mv-card, .media-card { padding: 15px; }
+}

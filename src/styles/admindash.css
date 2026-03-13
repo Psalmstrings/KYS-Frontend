@@ -1,0 +1,16 @@
+.admin-container { 
+  display:flex; width: 100%; }
+.sidebar { width:220px; background:#6e8efb; color:white; padding:30px 20px; }
+.sidebar nav a { display:block; color:white; padding:10px 0; margin-bottom:5px; text-decoration:none; border-radius:6px; }
+.sidebar nav a.active, .sidebar nav a:hover { background:rgba(255,255,255,0.2); }
+.main-cont { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+.navbarr { background:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+.logout-btn { background:#f44336; border:none; padding:8px 12px; color:white; border-radius:5px; cursor:pointer; }
+
+.dashboard-content { padding:20px; }
+.news-table { width:100%; border-collapse:collapse; margin-top:20px; }
+.news-table th, .news-table td { border:1px solid #ddd; padding:10px; text-align:left; }
+.news-table th { background:#f4f7fd; }
+.news-table button { padding:6px 12px; margin-right:5px; border:none; border-radius:5px; cursor:pointer; }
+.news-table .delete-btn { background:#f44336; color:white; }
+.news-table button:hover { opacity:0.8; }
