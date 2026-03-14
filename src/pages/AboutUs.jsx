@@ -7,6 +7,8 @@ import osunPro from "../assets/COMR IBRAHEEM.jpeg";
 import osunPro2 from "../assets/Comrade Ridwan.jpeg";
 import osunPro3 from "../assets/COMRADE. ADEYANJU.jpeg";
 import osunPro4 from "../assets/JOHNPAU.jpeg";
+import osunPro5 from "../assets/AD Smart.jpeg";
+import osunPro6 from "../assets/Celebrity Farmer.jpeg";
 import Navbarr from "../components/Navbarr";
 
 const AboutUs = () => {
@@ -132,7 +134,7 @@ const AboutUs = () => {
       </section>
 
       {/* MEDIA TEAM */}
-      <section className="media-team fade-in">
+      
         <h2 className="section-title">Media Team</h2>
         <p className="section-subtext">The creative minds supporting the voice of the Zone</p>
 
@@ -160,8 +162,20 @@ const AboutUs = () => {
             <h3>COMRADE ADEYANJU JOSHUA (ANIYIKAYE)</h3>
             <h6>PRO, NANS JCC OYO</h6>
           </div>
+
+          <div className="media-card slide-up">
+            <img src={osunPro6} alt="OYO PRO" />
+            <h3>COMR SODIQ HASSAN(CELEBRITY FARMER)</h3>
+            <h6>PRO, NANS JCC OGUN</h6>
+          </div>
+
+          <div className="media-card slide-up">
+            <img src={osunPro5} alt="OYO PRO" />
+            <h3>COMRADE ADESIPE SMART AYODEJI F.(AD Smart )</h3>
+            <h6>PRO, NANS JCC EKITI</h6>
+          </div>
         </div>
-      </section>
+      
 
       {/* FOOTER */}
       <footer className="footer">

@@ -2,35 +2,38 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import "../styles/admindash.css";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
-const API_URL = import.meta.env.BLOG_API_URL; // Make sure your .env has this
+const API_URL = import.meta.env.VITE_API; 
 
 const NewsManagement = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch headlines from API
+  // Fetch headlines
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/news/headlines`, {
+      const response = await axios.get(`${API_URL}/news/headlines`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
-      // Ensure we get an array
+      // Handle response
       if (Array.isArray(response.data)) {
         setNews(response.data);
       } else if (Array.isArray(response.data.headlines)) {
         setNews(response.data.headlines);
       } else {
         setNews([]);
-        console.warn("Unexpected headlines response format:", response.data);
+        console.warn("Unexpected response format:", response.data);
       }
 
-      console.log("Fetched headlines:", response.data); // Debug log
+      console.log("Fetched headlines:", response.data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch headlines");
+      setNews([]);
     } finally {
       setLoading(false);
     }
@@ -40,11 +43,11 @@ const NewsManagement = () => {
     fetchNews();
   }, []);
 
-  // Approve a headline (only if your API supports this)
+  // Approve news (optional, if API exists)
   const approveNews = async (id) => {
     try {
       await axios.put(
-        `${API_URL}/api/admin/news/${id}/approve`,
+        `${API_URL}/admin/news/${id}/approve`,
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -56,11 +59,11 @@ const NewsManagement = () => {
     }
   };
 
-  // Delete a headline
+  // Delete news
   const deleteNews = async (id) => {
     if (!window.confirm("Are you sure you want to delete this news?")) return;
     try {
-      await axios.delete(`${API_URL}/api/admin/news/${id}`, {
+      await axios.delete(`${API_URL}/admin/news/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       toast.success("News deleted");
@@ -72,7 +75,11 @@ const NewsManagement = () => {
   };
 
   return (
-    <div className="dashboard-content">
+    <div>
+        <Navbar />
+        <div className="section">
+          <Sidebar />
+          <div className="dashboard-content">
       <h2>News Management</h2>
 
       {loading ? (
@@ -83,7 +90,7 @@ const NewsManagement = () => {
         <table className="news-table">
           <thead>
             <tr>
-              <th>Title</th>
+              <th>News Title</th>
               <th>Blogger</th>
               <th>Status</th>
               <th>Actions</th>
@@ -93,7 +100,7 @@ const NewsManagement = () => {
             {news.map((n) => (
               <tr key={n._id}>
                 <td>{n.title}</td>
-                <td>{n.author}</td>
+                <td>{n.author?.name || "Unknown"}</td>
                 <td>{n.approved ? "Approved" : "Pending"}</td>
                 <td>
                   {!n.approved && (
@@ -111,6 +118,8 @@ const NewsManagement = () => {
           </tbody>
         </table>
       )}
+    </div>
+        </div>
     </div>
   );
 };

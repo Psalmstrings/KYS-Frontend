@@ -17,6 +17,11 @@ import NewsPage from "./pages/Newspage";
 import SingleNewspage from "./pages/SingleNewspage";
 import AboutUs from "./pages/AboutUs";
 import Navbarr from "./components/Navbarr";
+import CreateNews from "./components/CreateNews";
+import CreateeNews from "./components/BloggerCreateNews"
+import BloggerProfile from "./pages/BloggerProfilePage";
+import BloggerNewsManagement from "./pages/BloggerNewsManagement";
+import ProtecteddRoute from "./context/BlogContext";
 // import SingleNews from "./pages/SingleNewspage";
 
 
@@ -41,8 +46,12 @@ function App() {
        
         </Route>
         <Route path="/admin/news" element={<NewsManagement />} />
+        <Route path="/admin-news" element={<BloggerNewsManagement />} />
         <Route path="/blog/admin/bloggers" element={<BloggerManagement />} />
-
+        <Route path="/create-news" element={<CreateNews />} />
+        <Route path="/create/news" element={<CreateeNews />} />
+        <Route path="/blog/profile" element={<ProtecteddRoute><BloggerProfile /></ProtecteddRoute>} />
+        <Route path="/news-management" element={<BloggerNewsManagement />} />
         <Route path="/admin/" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path='*' element={<NotFound />} />
       </Routes>

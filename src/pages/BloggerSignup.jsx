@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import "../styles/blogStyles.css"; // Reuse same CSS for consistency
 
-const API_URL = import.meta.env.BLOG_API_URL;
+const API_URL = import.meta.env.VITE_API; 
 
 const BloggerSignUp = () => {
   const [name, setName] = useState("");
@@ -39,7 +39,7 @@ const BloggerSignUp = () => {
 
       localStorage.setItem("token", data.token);
       toast.success("Sign up successful! Welcome to Blogger Dashboard");
-      navigate("/blogger");
+      navigate("/blogger/login");
     } catch (err) {
       const message = err.response?.data?.message || "Sign up Failed";
       toast.error(message);

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 
-const API_URL = import.meta.env.BLOG_API_URL;
+const API_URL = import.meta.env.VITE_API; 
 
 const BloggerManagement = () => {
   const [bloggers, setBloggers] = useState([]); // default to empty array
@@ -11,7 +13,7 @@ const BloggerManagement = () => {
   const fetchBloggers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/users/getusers`, {
+      const response = await axios.get(`${API_URL}/users/getusers`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -41,7 +43,12 @@ const BloggerManagement = () => {
   
 
   return (
-    <div className="dashboard-content">
+    <div>
+      <Navbar />
+      <div className="section">
+        <Sidebar />
+        <div>
+          <div className="dashboard-content">
       <h2>Blogger Management</h2>
 
       {loading ? (
@@ -77,6 +84,9 @@ const BloggerManagement = () => {
           </tbody>
         </table>
       )}
+    </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -9,12 +9,12 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     toast.success("Logged out successfully");
-    navigate("/blogadmin/login");
+    navigate("/blogger/login");
   };
 
   return (
     <div className="navbarr">
-      <h3>News Admin Dashboard</h3>
+      <h3>Blogger Dashboard</h3>
       <button className="logout-btn" onClick={handleLogout}>Logout</button>
     </div>
   );

@@ -1,0 +1,73 @@
+/* Container */
+.create-news-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Form */
+.create-news-form .form-group {
+  margin-bottom: 20px;
+}
+
+.create-news-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.create-news-form input[type="text"],
+.create-news-form textarea,
+.create-news-form input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.create-news-form textarea {
+  resize: vertical;
+}
+
+/* Cover preview */
+.cover-preview {
+  margin-top: 10px;
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Button */
+.create-news-form button {
+  background-color: #0077cc;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.create-news-form button:hover {
+  background-color: #005fa3;
+}
+
+.create-news-form button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-news-container {
+    padding: 15px;
+  }
+}

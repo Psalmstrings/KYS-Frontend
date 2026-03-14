@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import "../styles/blogStyles.css";
 
-const API_URL = import.meta.env.BLOG_API_URL;
+const API_URL = import.meta.env.VITE_API; 
 
 const AdminBlogLogin = () => {
   const [email, setEmail] = useState("");
@@ -23,12 +23,13 @@ const AdminBlogLogin = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`http://localhost:5000/api/auth/admin/login`, {
+      const { data } = await axios.post(`${API_URL}/auth/admin/login`, {
         email,
         password,
       });
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.admin.role);
       toast.success("Login successful! Welcome to Admin Blog Dashboard");
       navigate("/blog/admin");
     } catch (err) {

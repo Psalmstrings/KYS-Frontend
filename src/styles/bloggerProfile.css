@@ -1,0 +1,81 @@
+.blogger-profile {
+  max-width: 900px;
+  margin: 40px auto;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+  padding: 0 20px;
+}
+
+.profile-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 40px;
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.profile-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 20px;
+  border: 3px solid #0077cc;
+}
+
+.profile-info h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.profile-info .email {
+  color: #555;
+  margin: 5px 0;
+}
+
+.profile-info .bio {
+  margin: 10px 0;
+}
+
+.profile-stats span {
+  margin-right: 20px;
+  font-weight: bold;
+  color: #0077cc;
+}
+
+.blogger-news h2 {
+  margin-bottom: 20px;
+}
+
+.news-list {
+  list-style: none;
+  padding: 0;
+}
+
+.news-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #fafafa;
+  border-left: 5px solid #ccc;
+}
+
+.news-list li.approved {
+  border-left-color: #00C49F;
+}
+
+.news-list li.pending {
+  border-left-color: #FF8042;
+}
+
+.news-title {
+  font-weight: 500;
+}
+
+.news-status {
+  font-weight: bold;
+}

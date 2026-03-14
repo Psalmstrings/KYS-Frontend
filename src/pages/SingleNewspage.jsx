@@ -9,12 +9,13 @@ export default function SingleNews() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-   const API_URL = import.meta.env.BLOG_API_URL; // from your .env
+  const API_URL = import.meta.env.VITE_API; 
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/news/${id}`, { withCredentials: true });
+        // FIX: removed extra } after API_URL
+        const res = await axios.get(`${API_URL}/news/${id}`, { withCredentials: true });
         setNews(res.data);
       } catch (err) {
         console.error("Error fetching news:", err);

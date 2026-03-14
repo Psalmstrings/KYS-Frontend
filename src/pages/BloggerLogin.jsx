@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import "../styles/blogStyles.css";
 
-const API_URL = import.meta.env.BLOG_API_URL;
+const API_URL = import.meta.env.VITE_API; 
 
 const BloggerLogin = () => {
   const [email, setEmail] = useState("");
@@ -23,17 +23,33 @@ const BloggerLogin = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`${API_URL}/blogger/login`, {
-        email,
-        password,
-      });
+      const { data } = await axios.post(
+        `${API_URL}/auth/blogger/login`,
+        {
+          email,
+          password,
+        }
+      );
 
+      // Save token
       localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.blogger.role)
+
+      // Save role safely
+      if (data.blogger?.role) {
+        localStorage.setItem("role", data.blogger.role);
+      }
+
       toast.success("Login successful! Welcome to Blogger Dashboard");
-      navigate("/blogger");
+
+      navigate("/blog/profile");
+
     } catch (err) {
-      const message = err.response?.data?.message || "Login Failed";
+      console.log(err);
+
+      const message = err.response?.data?.message || "Login failed";
       toast.error(message);
+
     } finally {
       setLoading(false);
     }
@@ -44,7 +60,9 @@ const BloggerLogin = () => {
       <div className="login-card">
         <h1 className="login-title">Blogger Dashboard</h1>
         <p className="login-subtitle">Sign in to manage your blog posts</p>
+
         <form onSubmit={handleSubmit} className="login-form">
+
           <div className="input-group">
             <label>Email</label>
             <input
@@ -52,6 +70,7 @@ const BloggerLogin = () => {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -62,16 +81,18 @@ const BloggerLogin = () => {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
 
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
+
         </form>
 
         <p className="login-footer">
-          &copy; {new Date().getFullYear()} Office of the ZONE D PRO. All rights reserved.
+          © {new Date().getFullYear()} Office of the ZONE D PRO. All rights reserved.
         </p>
       </div>
     </div>
