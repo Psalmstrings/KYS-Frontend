@@ -37,7 +37,7 @@ const Homepage = () => {
       </button>
     </div>
 
-    <div>
+    <div className="shapeeee">
        {/* Right mock card */}
         <div className="hero-mock">
           

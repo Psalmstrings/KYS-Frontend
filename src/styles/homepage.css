@@ -75,7 +75,7 @@ h1, h2, h3, h4 {
 .shape {
   position: absolute;
   border-radius: 50%;
-  filter: blur(5px);
+  filter: blur(40px);
   opacity: 1.5;
   animation: float 12s infinite ease-in-out,
              rotate 20s infinite linear,
@@ -410,17 +410,10 @@ h1, h2, h3, h4 {
     flex-direction: column;
     text-align: center;
   }
-
-  .shape {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 1.5;
-  animation: float 12s infinite ease-in-out,
-             rotate 20s infinite linear,
-             pulse 6s infinite ease-in-out;
-  z-index: 0;
-}
+  .shapeeee{
+    display: none;
+  }
+  
 
   .about-grid,
   .mandate-grid,

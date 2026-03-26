@@ -10,6 +10,12 @@ const API_URL = import.meta.env.VITE_API;
 const BloggerNewsManagement = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentNews, setCurrentNews] = useState(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+  });
 
   // Fetch headlines
   const fetchNews = async () => {
@@ -57,10 +63,43 @@ const BloggerNewsManagement = () => {
     }
   };
 
-  // Edit news - redirect to edit page
-  // const editNews = (id) => {
-  //   window.location.href = `/edit-news/${id}`;
-  // };
+  // Edit News
+  const handleEditClick = (newsItem) => {
+  setCurrentNews(newsItem);
+  setFormData({
+    title: newsItem.title || "",
+    content: newsItem.content || "",
+  });
+  setIsModalOpen(true);
+};
+
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+const handleUpdateNews = async () => {
+  try {
+    await axios.put(
+      `${API_URL}/news/${currentNews._id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    toast.success("News updated successfully");
+    setIsModalOpen(false);
+    fetchNews();
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update news");
+  }
+};
+
+  
 
   return (
     <div>
@@ -91,7 +130,7 @@ const BloggerNewsManagement = () => {
                     <td>{n.author?.name || "Unknown"}</td>
                     <td>{n.approved ? "Approved" : "Pending"}</td>
                     <td>
-                      <button >Edit</button>
+                      <button onClick={() => handleEditClick(n)}>Edit</button>
                       <button
                         onClick={() => deleteNews(n._id)}
                         className="delete-btn"
@@ -103,6 +142,34 @@ const BloggerNewsManagement = () => {
                 ))}
               </tbody>
             </table>
+          )}
+
+          {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Edit News</h3>
+
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="News Title"
+            />
+
+            <textarea
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              placeholder="News Content"
+            />
+
+            <div className="modal-actions">
+              <button onClick={handleUpdateNews}>Save</button>
+              <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
           )}
         </div>
       </div>
