@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { Helmet } from "react-helmet-async";   // SEO metadata
 import "../styles/blogStyles.css";
 
 export default function SingleNews() {
@@ -14,7 +15,6 @@ export default function SingleNews() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        // FIX: removed extra } after API_URL
         const res = await axios.get(`${API_URL}/news/${id}`, { withCredentials: true });
         setNews(res.data);
       } catch (err) {
@@ -32,8 +32,33 @@ export default function SingleNews() {
   if (error) return <p style={{ textAlign: "center", marginTop: "40px", color: "red" }}>{error}</p>;
   if (!news) return <p style={{ textAlign: "center", marginTop: "40px" }}>News not found.</p>;
 
+  const pageUrl = `${window.location.origin}/news/${id}`;
+  const shortDescription = news.content?.slice(0, 150) + "...";
+
   return (
     <>
+      {/* ---------- SEO METADATA ---------- */}
+      <Helmet>
+        <title>{news.title} | Latest News</title>
+
+        <meta name="description" content={shortDescription} />
+
+        {/* --- Open Graph (Facebook, WhatsApp) --- */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={news.title} />
+        <meta property="og:description" content={shortDescription} />
+        <meta property="og:image" content={news.coverImage} />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:site_name" content="News Portal" />
+
+        {/* --- Twitter Card --- */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={news.title} />
+        <meta name="twitter:description" content={shortDescription} />
+        <meta name="twitter:image" content={news.coverImage} />
+      </Helmet>
+
+      {/* ---------- PAGE CONTENT ---------- */}
       <header className="top-header">
         <div className="container">
           <h1 className="site-title">News Details</h1>
