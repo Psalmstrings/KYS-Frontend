@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "rewrites": [
     {
       "source": "/news/:id",
@@ -6,10 +7,10 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i).*(facebookexternalhit|whatsapp|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|applebot).*"
+          "value": ".*([wW]hats[aA]pp|[fF]acebookexternalhit|[fF]acebot|[fF]acebookcatalog|[tT]witterbot|[xX]bot|[lL]inked[iI]n[bB]ot|[tT]elegram[bB]ot|[sS]lackbot|[dD]iscordbot|[aA]pplebot|[pP]interest|[mM]eta-[eE]xternal|[sS]kype[uU]ri[pP]review|[gG]ooglebot|[bB]ingbot).*"
         }
       ],
-      "destination": "/api/news/:id"
+      "destination": "/api/news/[id]?id=:id"
     },
     {
       "source": "/(.*)",

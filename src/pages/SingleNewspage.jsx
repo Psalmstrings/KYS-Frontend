@@ -44,34 +44,43 @@ export default function SingleNews() {
     fetchNews();
   }, [API_URL, id]);
 
-  const pageUrl = typeof window !== "undefined" ? window.location.href : `https://officeoftheprozoned.com/news/${id}`;
-  const plainTextContent = news?.content ? news.content.replace(/<[^>]*>?/gm, "") : "";
-  const shortDescription = plainTextContent ? plainTextContent.slice(0, 160) + "..." : "Read the latest update from NANS Southwest Zone D Office of the PRO.";
-  const featuredImage = news?.coverImage || "https://res.cloudinary.com/dd5p5t2rs/image/upload/v1773514865/blog_images/pd3q0fe4cnvj4pr5yr1i.jpg";
+  const canonicalUrl = `https://officeoftheprozoned.com/news/${news?._id || id}`;
+  const pageUrl = canonicalUrl;
+  const plainTextContent = news?.content ? news.content.replace(/<[^>]*>?/gm, "").replace(/\s+/g, " ").trim() : "";
+  const shortDescription = plainTextContent ? (plainTextContent.length > 180 ? plainTextContent.slice(0, 177) + "..." : plainTextContent) : "Read the latest update from NANS Southwest Zone D Office of the PRO.";
+  
+  let rawImage = news?.coverImage || "https://res.cloudinary.com/dd5p5t2rs/image/upload/v1773514865/blog_images/pd3q0fe4cnvj4pr5yr1i.jpg";
+  rawImage = rawImage.trim().replace(/^http:\/\//, "https://");
+  let featuredImage = rawImage;
+  if (rawImage.includes("res.cloudinary.com") && rawImage.includes("/upload/")) {
+    if (!rawImage.includes("c_fill")) {
+      featuredImage = rawImage.replace("/upload/", "/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/");
+    }
+  }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(pageUrl);
+    navigator.clipboard.writeText(canonicalUrl);
     setCopied(true);
-    toast.success("Article link copied to clipboard!");
+    toast.success("Article link copied! Ready to share with image preview.");
     setTimeout(() => setCopied(false), 3000);
   };
 
   const shareWhatsApp = () => {
-    const text = `${news?.title}\n\nRead more on Office of the PRO: ${pageUrl}`;
+    const text = `*${news?.title}*\n\n${shortDescription}\n\nRead full story:\n${canonicalUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const shareFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`, "_blank");
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`, "_blank");
   };
 
   const shareTwitter = () => {
-    const text = `${news?.title} - Office of the PRO NANS Southwest Zone D`;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`, "_blank");
+    const text = `${news?.title} — Office of the PRO NANS Southwest Zone D`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(canonicalUrl)}`, "_blank");
   };
 
   const shareLinkedIn = () => {
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`, "_blank");
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrl)}`, "_blank");
   };
 
   return (
