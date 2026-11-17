@@ -15,18 +15,28 @@ import {
   FaComments, 
   FaGlobe, 
   FaUserGraduate,
-  FaHistory
+  FaHistory,
+  FaChartLine,
+  FaUsers,
+  FaCloudUploadAlt,
+  FaExternalLinkAlt,
+  FaSearch,
+  FaFilter,
+  FaEye,
+  FaLock
 } from "react-icons/fa";
 import "../styles/adminDashboard.css";
 
 const API_URL = import.meta.env.VITE_API || "https://blogbackend-xzrv.onrender.com/api";
 const KYS_API_URL = import.meta.env.VITE_API_URL || "https://kys-backend.onrender.com";
 
+const SOUTHWEST_STATES = ["Lagos", "Ogun", "Oyo", "Osun", "Ondo", "Ekiti"];
+
 export default function BlogAdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
 
-  // Stats state
+  // Overall counts
   const [stats, setStats] = useState({
     totalNews: 0,
     approvedNews: 0,
@@ -34,6 +44,19 @@ export default function BlogAdminDashboard() {
     totalLeaders: 0,
     totalInquiries: 0,
     totalStudents: 0
+  });
+
+  // Analytics state
+  const [analytics, setAnalytics] = useState({
+    totalViews: 0,
+    uniqueVisitors: 0,
+    todayViews: 0,
+    weekViews: 0,
+    topPages: [],
+    topRegions: [],
+    topCountries: [],
+    devices: [],
+    recentVisits: []
   });
 
   // Homepage CMS State
@@ -68,8 +91,9 @@ export default function BlogAdminDashboard() {
 
   // Leadership state
   const [leaders, setLeaders] = useState([]);
-  const [showAddLeaderModal, setShowAddLeaderModal] = useState(false);
-  const [newLeader, setNewLeader] = useState({
+  const [showLeaderModal, setShowLeaderModal] = useState(false);
+  const [editingLeaderId, setEditingLeaderId] = useState(null);
+  const [leaderForm, setLeaderForm] = useState({
     fullName: "",
     position: "",
     category: "Executive",
@@ -81,6 +105,21 @@ export default function BlogAdminDashboard() {
     displayPriority: 0,
     isFeatured: false
   });
+  const [leaderPhotoFile, setLeaderPhotoFile] = useState(null);
+  const [leaderPhotoPreview, setLeaderPhotoPreview] = useState("");
+  const [leaderSubmitting, setLeaderSubmitting] = useState(false);
+
+  // Blogger Management state
+  const [bloggers, setBloggers] = useState([]);
+  const [showBloggerModal, setShowBloggerModal] = useState(false);
+  const [bloggerSubmitting, setBloggerSubmitting] = useState(false);
+  const [newBlogger, setNewBlogger] = useState({
+    name: "",
+    email: "",
+    password: "",
+    bio: "",
+    avatar: ""
+  });
 
   // Inquiries state
   const [inquiries, setInquiries] = useState([]);
@@ -91,8 +130,11 @@ export default function BlogAdminDashboard() {
   // KYS Integration State
   const [kysStudents, setKysStudents] = useState([]);
   const [kysSearch, setKysSearch] = useState("");
+  const [kysStateFilter, setKysStateFilter] = useState("All");
+  const [kysStatusFilter, setKysStatusFilter] = useState("All");
   const [kysLoading, setKysLoading] = useState(false);
   const [kysStatsDetail, setKysStatsDetail] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const getAuthHeader = () => {
     const token = localStorage.getItem("pro_admin_token") || localStorage.getItem("token");
@@ -104,10 +146,90 @@ export default function BlogAdminDashboard() {
     return { Authorization: `Bearer ${token}` };
   };
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "kys") {
+      fetchKysStudents(kysSearch);
+    } else if (activeTab === "bloggers") {
+      fetchBloggers();
+    } else if (activeTab === "analytics") {
+      fetchAnalytics();
+    }
+  }, [activeTab]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const [newsStatsRes, hpRes, orgRes, leadRes, inqRes, auditRes, analyticsRes] = await Promise.all([
+        axios.get(`${API_URL}/news/stats`).catch(() => null),
+        axios.get(`${API_URL}/homepage`).catch(() => null),
+        axios.get(`${API_URL}/org-info`).catch(() => null),
+        axios.get(`${API_URL}/leadership/admin/all`, { headers: getAuthHeader() }).catch(() => null),
+        axios.get(`${API_URL}/inquiries`, { headers: getAuthHeader() }).catch(() => null),
+        axios.get(`${API_URL}/audit-logs`, { headers: getAuthHeader() }).catch(() => null),
+        axios.get(`${API_URL}/analytics/stats`, { headers: getAuthHeader() }).catch(() => null),
+      ]);
+
+      if (hpRes?.data?.homepage) setHomepageForm(hpRes.data.homepage);
+      if (orgRes?.data?.orgInfo) setOrgInfoForm(orgRes.data.orgInfo);
+      if (leadRes?.data?.profiles) setLeaders(leadRes.data.profiles);
+      if (inqRes?.data?.inquiries) setInquiries(inqRes.data.inquiries);
+      if (auditRes?.data?.logs) setAuditLogs(auditRes.data.logs);
+      if (analyticsRes?.data?.stats) setAnalytics(analyticsRes.data.stats);
+
+      // KYS stats
+      const kysStatsRes = await axios.get(`${KYS_API_URL}/api/students/stats`, {
+        headers: getKysAuthHeader()
+      }).catch(() => null);
+
+      if (kysStatsRes?.data?.stats) {
+        setKysStatsDetail(kysStatsRes.data.stats);
+      }
+
+      setStats({
+        totalNews: newsStatsRes?.data?.stats?.totalNews || 0,
+        approvedNews: newsStatsRes?.data?.stats?.approvedNews || 0,
+        pendingNews: newsStatsRes?.data?.stats?.pendingNews || 0,
+        totalLeaders: leadRes?.data?.count || 0,
+        totalInquiries: inqRes?.data?.count || 0,
+        totalStudents: kysStatsRes?.data?.stats?.total || 0
+      });
+    } catch (err) {
+      console.error("Dashboard data load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/analytics/stats`, { headers: getAuthHeader() });
+      if (res?.data?.stats) {
+        setAnalytics(res.data.stats);
+      }
+    } catch (err) {
+      console.error("Failed to fetch analytics:", err);
+    }
+  };
+
+  const fetchBloggers = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/auth/bloggers`, { headers: getAuthHeader() });
+      if (res?.data?.bloggers) {
+        setBloggers(res.data.bloggers);
+      }
+    } catch (err) {
+      console.error("Failed to fetch bloggers:", err);
+    }
+  };
+
   const fetchKysStudents = async (searchTerm = "") => {
     setKysLoading(true);
     try {
-      let queryUrl = `${KYS_API_URL}/api/students?limit=50`;
+      let queryUrl = `${KYS_API_URL}/api/students?limit=100`;
       if (searchTerm.trim()) {
         queryUrl += `&search=${encodeURIComponent(searchTerm.trim())}`;
       }
@@ -144,61 +266,6 @@ export default function BlogAdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      // 1. Fetch news stats
-      const newsStatsRes = await axios.get(`${API_URL}/news/stats`).catch(() => null);
-      // 2. Fetch homepage data
-      const hpRes = await axios.get(`${API_URL}/homepage`).catch(() => null);
-      if (hpRes?.data?.homepage) {
-        setHomepageForm(hpRes.data.homepage);
-      }
-      // 3. Fetch org info
-      const orgRes = await axios.get(`${API_URL}/org-info`).catch(() => null);
-      if (orgRes?.data?.orgInfo) {
-        setOrgInfoForm(orgRes.data.orgInfo);
-      }
-      // 4. Fetch leadership admin
-      const leadRes = await axios.get(`${API_URL}/leadership/admin/all`, { headers: getAuthHeader() }).catch(() => null);
-      if (leadRes?.data?.profiles) {
-        setLeaders(leadRes.data.profiles);
-      }
-      // 5. Fetch inquiries
-      const inqRes = await axios.get(`${API_URL}/inquiries`, { headers: getAuthHeader() }).catch(() => null);
-      if (inqRes?.data?.inquiries) {
-        setInquiries(inqRes.data.inquiries);
-      }
-      // 6. Fetch audit logs
-      const auditRes = await axios.get(`${API_URL}/audit-logs`, { headers: getAuthHeader() }).catch(() => null);
-      if (auditRes?.data?.logs) {
-        setAuditLogs(auditRes.data.logs);
-      }
-      // 7. Fetch KYS stats
-      const kysToken = localStorage.getItem("kys_token") || localStorage.getItem("token");
-      const kysStatsRes = await axios.get(`${KYS_API_URL}/api/students/stats`, {
-        headers: { Authorization: `Bearer ${kysToken}` }
-      }).catch(() => null);
-
-      setStats({
-        totalNews: newsStatsRes?.data?.stats?.totalNews || 0,
-        approvedNews: newsStatsRes?.data?.stats?.approvedNews || 0,
-        pendingNews: newsStatsRes?.data?.stats?.pendingNews || 0,
-        totalLeaders: leadRes?.data?.count || 0,
-        totalInquiries: inqRes?.data?.count || 0,
-        totalStudents: kysStatsRes?.data?.stats?.total || 0
-      });
-    } catch (err) {
-      console.error("Dashboard data load error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Save Homepage
   const handleSaveHomepage = async (e) => {
     e.preventDefault();
@@ -215,38 +282,115 @@ export default function BlogAdminDashboard() {
     e.preventDefault();
     try {
       await axios.put(`${API_URL}/org-info`, orgInfoForm, { headers: getAuthHeader() });
-      toast.success("Organizational information updated successfully!");
+      toast.success("Organizational ideals updated successfully!");
     } catch (err) {
       toast.error("Failed to update organizational info");
     }
   };
 
-  // Create Leader Profile
-  const handleCreateLeader = async (e) => {
+  // Open Add Leader Modal
+  const openAddLeaderModal = () => {
+    setEditingLeaderId(null);
+    setLeaderForm({
+      fullName: "",
+      position: "",
+      category: "Executive",
+      photo: "",
+      biography: "",
+      portfolio: "",
+      state: "Southwest Zone D",
+      administration: "2026-2027",
+      displayPriority: 0,
+      isFeatured: false
+    });
+    setLeaderPhotoFile(null);
+    setLeaderPhotoPreview("");
+    setShowLeaderModal(true);
+  };
+
+  // Open Edit Leader Modal
+  const openEditLeaderModal = (leader) => {
+    setEditingLeaderId(leader._id);
+    setLeaderForm({
+      fullName: leader.fullName || "",
+      position: leader.position || "",
+      category: leader.category || "Executive",
+      photo: leader.photo || "",
+      biography: leader.biography || "",
+      portfolio: leader.portfolio || "",
+      state: leader.state || "Southwest Zone D",
+      administration: leader.administration || "2026-2027",
+      displayPriority: leader.displayPriority || 0,
+      isFeatured: Boolean(leader.isFeatured)
+    });
+    setLeaderPhotoFile(null);
+    setLeaderPhotoPreview(leader.photo || "");
+    setShowLeaderModal(true);
+  };
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLeaderPhotoFile(file);
+      setLeaderPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Save Leadership Profile (Multipart with Cloudinary)
+  const handleSaveLeader = async (e) => {
     e.preventDefault();
-    if (!newLeader.fullName || !newLeader.position) {
-      toast.error("Name and Position are required");
+    if (!leaderForm.fullName.trim() || !leaderForm.position.trim()) {
+      toast.error("Full name and official position are required");
       return;
     }
+
+    setLeaderSubmitting(true);
+    const toastId = toast.loading(
+      leaderPhotoFile 
+        ? "Uploading photograph to Cloudinary & saving profile..." 
+        : "Saving leadership profile..."
+    );
+
     try {
-      await axios.post(`${API_URL}/leadership`, newLeader, { headers: getAuthHeader() });
-      toast.success("Leadership profile created successfully!");
-      setShowAddLeaderModal(false);
-      setNewLeader({
-        fullName: "",
-        position: "",
-        category: "Executive",
-        photo: "",
-        biography: "",
-        portfolio: "",
-        state: "Southwest Zone D",
-        administration: "2026-2027",
-        displayPriority: 0,
-        isFeatured: false
-      });
+      const formData = new FormData();
+      formData.append("fullName", leaderForm.fullName);
+      formData.append("position", leaderForm.position);
+      formData.append("category", leaderForm.category);
+      formData.append("state", leaderForm.state);
+      formData.append("administration", leaderForm.administration);
+      formData.append("displayPriority", leaderForm.displayPriority);
+      formData.append("isFeatured", leaderForm.isFeatured);
+      formData.append("biography", leaderForm.biography);
+      formData.append("portfolio", leaderForm.portfolio);
+
+      if (leaderPhotoFile) {
+        formData.append("photo", leaderPhotoFile);
+      } else if (leaderForm.photo) {
+        formData.append("photo", leaderForm.photo);
+      }
+
+      let res;
+      if (editingLeaderId) {
+        res = await axios.put(`${API_URL}/leadership/${editingLeaderId}`, formData, {
+          headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
+        });
+        toast.success("Leadership profile updated successfully!", { id: toastId });
+      } else {
+        res = await axios.post(`${API_URL}/leadership`, formData, {
+          headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
+        });
+        toast.success("Leadership profile created and published!", { id: toastId });
+      }
+
+      setShowLeaderModal(false);
+      setLeaderPhotoFile(null);
+      setLeaderPhotoPreview("");
       fetchDashboardData();
     } catch (err) {
-      toast.error("Failed to create leadership profile");
+      console.error("Leadership save error:", err);
+      toast.error(err.response?.data?.message || "Failed to save leadership profile", { id: toastId });
+    } finally {
+      setLeaderSubmitting(false);
     }
   };
 
@@ -255,10 +399,55 @@ export default function BlogAdminDashboard() {
     if (!window.confirm("Are you sure you want to delete this leadership profile?")) return;
     try {
       await axios.delete(`${API_URL}/leadership/${id}`, { headers: getAuthHeader() });
-      toast.success("Profile deleted");
+      toast.success("Profile deleted successfully");
       fetchDashboardData();
     } catch (err) {
       toast.error("Failed to delete profile");
+    }
+  };
+
+  // Create Blogger Account
+  const handleCreateBlogger = async (e) => {
+    e.preventDefault();
+    if (!newBlogger.name.trim() || !newBlogger.email.trim() || !newBlogger.password) {
+      toast.error("Name, email, and initial password are required");
+      return;
+    }
+
+    setBloggerSubmitting(true);
+    try {
+      await axios.post(`${API_URL}/auth/blogger/create`, newBlogger, { headers: getAuthHeader() });
+      toast.success(`Blogger account created for ${newBlogger.name}!`);
+      setShowBloggerModal(false);
+      setNewBlogger({ name: "", email: "", password: "", bio: "", avatar: "" });
+      fetchBloggers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create blogger account");
+    } finally {
+      setBloggerSubmitting(false);
+    }
+  };
+
+  // Toggle Blogger Status (Active / Suspended)
+  const handleToggleBlogger = async (id) => {
+    try {
+      await axios.put(`${API_URL}/auth/bloggers/${id}/toggle`, {}, { headers: getAuthHeader() });
+      toast.success("Blogger status updated");
+      fetchBloggers();
+    } catch (err) {
+      toast.error("Failed to update blogger status");
+    }
+  };
+
+  // Delete Blogger
+  const handleDeleteBlogger = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete blogger "${name}"?`)) return;
+    try {
+      await axios.delete(`${API_URL}/auth/bloggers/${id}`, { headers: getAuthHeader() });
+      toast.success("Blogger deleted");
+      fetchBloggers();
+    } catch (err) {
+      toast.error("Failed to delete blogger");
     }
   };
 
@@ -273,156 +462,614 @@ export default function BlogAdminDashboard() {
     }
   };
 
+  // Filtered KYS students
+  const filteredStudents = kysStudents.filter((st) => {
+    const matchesState = kysStateFilter === "All" || st.stateOrigin === kysStateFilter || st.stateResidence === kysStateFilter;
+    const matchesStatus = kysStatusFilter === "All" || st.verificationStatus === kysStatusFilter;
+    return matchesState && matchesStatus;
+  });
+
   return (
     <div>
       <Navbar />
       <div className="section">
         <Sidebar />
         <div className="admin-dashboard">
+          {/* Header */}
           <div className="admin-header-flex">
             <div>
-              <h1>Central Admin Content Management System</h1>
-              <p className="admin-subtext">Manage live public website content, leadership, press releases, and inquiries</p>
+              <h1>Central Administration Control Center</h1>
+              <p className="admin-subtext">Authoritative management of public website content, leadership, KYS verification, bloggers, and visitor analytics.</p>
             </div>
             <button onClick={fetchDashboardData} className="refresh-btn">
               ↻ Refresh Data
             </button>
           </div>
 
-          {/* Navigation Tabs */}
+          {/* Clean CMS Tabs Bar (No Emojis, Pure Professionalism) */}
           <div className="cms-tabs-bar">
             <button
               className={`cms-tab-btn ${activeTab === "overview" ? "active" : ""}`}
               onClick={() => setActiveTab("overview")}
             >
-              📊 Overview & Analytics
+              Overview
             </button>
             <button
-              className={`cms-tab-btn ${activeTab === "homepage" ? "active" : ""}`}
-              onClick={() => setActiveTab("homepage")}
+              className={`cms-tab-btn ${activeTab === "analytics" ? "active" : ""}`}
+              onClick={() => setActiveTab("analytics")}
             >
-              🏠 Homepage Manager
+              Analytics & Traffic
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "leadership" ? "active" : ""}`}
               onClick={() => setActiveTab("leadership")}
             >
-              👥 Leadership Directory
+              Leadership Directory
+            </button>
+            <button
+              className={`cms-tab-btn ${activeTab === "kys" ? "active" : ""}`}
+              onClick={() => setActiveTab("kys")}
+            >
+              KYS Student Records
+            </button>
+            <button
+              className={`cms-tab-btn ${activeTab === "bloggers" ? "active" : ""}`}
+              onClick={() => setActiveTab("bloggers")}
+            >
+              Blogger Team
+            </button>
+            <button
+              className={`cms-tab-btn ${activeTab === "homepage" ? "active" : ""}`}
+              onClick={() => setActiveTab("homepage")}
+            >
+              Homepage CMS
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "orginfo" ? "active" : ""}`}
               onClick={() => setActiveTab("orginfo")}
             >
-              🏛️ About & Ideals
+              Ideals & About
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "inquiries" ? "active" : ""}`}
               onClick={() => setActiveTab("inquiries")}
             >
-              📬 Inquiries ({inquiries.filter(i => i.status === "New").length} New)
-            </button>
-            <button
-              className={`cms-tab-btn ${activeTab === "kys" ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab("kys");
-                fetchKysStudents();
-              }}
-            >
-              🎓 KYS Student Portal ({stats.totalStudents})
+              Inquiries ({stats.totalInquiries})
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "audit" ? "active" : ""}`}
               onClick={() => setActiveTab("audit")}
             >
-              🛡️ Audit Trail
+              Security Audit
             </button>
           </div>
 
+          {/* CONTENT TABS */}
           {loading ? (
             <div className="cms-loading-box">
               <div className="spinner"></div>
-              <p>Connecting to database services...</p>
+              <p>Synchronizing central administrative registry...</p>
             </div>
           ) : (
-            <>
+            <div>
               {/* TAB 1: OVERVIEW */}
               {activeTab === "overview" && (
                 <div className="cms-tab-content">
                   <div className="stats-cards">
-                    <div className="card">
-                      <h3>Total News Articles</h3>
-                      <p>{stats.totalNews}</p>
-                      <span className="card-sub">{stats.approvedNews} Approved • {stats.pendingNews} Pending</span>
-                    </div>
-                    <div className="card">
-                      <h3>Leadership Profiles</h3>
-                      <p>{stats.totalLeaders}</p>
-                      <span className="card-sub">Executives & State PROs</span>
-                    </div>
-                    <div className="card">
-                      <h3>Student Inquiries</h3>
-                      <p>{stats.totalInquiries}</p>
-                      <span className="card-sub">{inquiries.filter(i => i.status === "New").length} Unreviewed</span>
-                    </div>
                     <div className="card highlight">
-                      <h3>KYS Registered Students</h3>
+                      <h3>Total Registered Students</h3>
                       <p>{stats.totalStudents}</p>
-                      <span className="card-sub">Direct portal records</span>
+                      <span className="card-sub">KYS Student Portal (Live)</span>
+                    </div>
+                    <div className="card">
+                      <h3>Website Page Views</h3>
+                      <p>{analytics.totalViews}</p>
+                      <span className="card-sub">{analytics.uniqueVisitors} Unique Visitors</span>
+                    </div>
+                    <div className="card">
+                      <h3>Leadership Officers</h3>
+                      <p>{stats.totalLeaders}</p>
+                      <span className="card-sub">Active Executive Profiles</span>
+                    </div>
+                    <div className="card">
+                      <h3>Published Releases</h3>
+                      <p>{stats.approvedNews}</p>
+                      <span className="card-sub">{stats.pendingNews} Pending Review</span>
                     </div>
                   </div>
 
                   {/* Quick Action Cards */}
-                  <div className="quick-actions-grid">
-                    <div className="qa-card" onClick={() => setActiveTab("homepage")}>
-                      <h4>Edit Homepage Content</h4>
-                      <p>Update hero headlines, About text, and Meet the PRO quotes.</p>
-                      <span>Manage Homepage →</span>
+                  <div className="analytics-grid-2">
+                    <div className="analytics-card">
+                      <div className="analytics-card-header">
+                        <h3>Leadership Management</h3>
+                        <button onClick={openAddLeaderModal} className="cms-btn-primary" style={{ padding: "6px 14px", fontSize: "0.85rem", margin: 0 }}>
+                          <FaPlus /> Add Officer
+                        </button>
+                      </div>
+                      <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: "1.6" }}>
+                        Manage executives, directors, special assistants, and all 6 Southwest State PROs. Profiles are automatically synced across the Homepage and About Us directory.
+                      </p>
+                      <button onClick={() => setActiveTab("leadership")} className="cms-btn-secondary" style={{ marginTop: "14px" }}>
+                        View Leadership Roster →
+                      </button>
                     </div>
-                    <div className="qa-card" onClick={() => setActiveTab("leadership")}>
-                      <h4>Manage Leadership</h4>
-                      <p>Add new executives, state PROs, and update individual portfolios.</p>
-                      <span>Manage Directory →</span>
-                    </div>
-                    <div className="qa-card" onClick={() => window.location.href = "/admin/news"}>
-                      <h4>Review Press Releases</h4>
-                      <p>Approve pending submissions, publish new stories, or edit articles.</p>
-                      <span>Manage News →</span>
+
+                    <div className="analytics-card">
+                      <div className="analytics-card-header">
+                        <h3>Student Verification Registry (KYS)</h3>
+                        <button onClick={() => setActiveTab("kys")} className="cms-btn-primary" style={{ padding: "6px 14px", fontSize: "0.85rem", margin: 0 }}>
+                          Manage Students →
+                        </button>
+                      </div>
+                      <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: "1.6" }}>
+                        All student registrations across Lagos, Ogun, Oyo, Osun, Ondo, and Ekiti are directly controlled here. Verify credentials, check bursary data, or print student slips.
+                      </p>
+                      <button onClick={() => setActiveTab("kys")} className="cms-btn-secondary" style={{ marginTop: "14px" }}>
+                        Open KYS Directory →
+                      </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: HOMEPAGE CMS */}
+              {/* TAB 2: ANALYTICS & TRAFFIC */}
+              {activeTab === "analytics" && (
+                <div className="cms-tab-content">
+                  <div className="stats-cards">
+                    <div className="card highlight">
+                      <h3>Total Website Hits</h3>
+                      <p>{analytics.totalViews}</p>
+                      <span className="card-sub">All Tracked Sessions</span>
+                    </div>
+                    <div className="card">
+                      <h3>Unique Visitors</h3>
+                      <p>{analytics.uniqueVisitors}</p>
+                      <span className="card-sub">Distinct IP Addresses</span>
+                    </div>
+                    <div className="card">
+                      <h3>Today's Views</h3>
+                      <p>{analytics.todayViews}</p>
+                      <span className="card-sub">Last 24 Hours</span>
+                    </div>
+                    <div className="card">
+                      <h3>7-Day Traffic</h3>
+                      <p>{analytics.weekViews}</p>
+                      <span className="card-sub">Past 7 Days</span>
+                    </div>
+                  </div>
+
+                  <div className="analytics-grid-2">
+                    {/* Geographic Distribution (Nigerian States & Global) */}
+                    <div className="analytics-card">
+                      <div className="analytics-card-header">
+                        <h3>Visitor Locations (Southwest & Nigeria)</h3>
+                        <span style={{ fontSize: "0.8rem", color: "#15803d", fontWeight: "700" }}>Live GeoIP</span>
+                      </div>
+                      <div className="analytics-bar-list">
+                        {analytics.topRegions && analytics.topRegions.length > 0 ? (
+                          analytics.topRegions.map((reg, idx) => {
+                            const maxCount = analytics.topRegions[0]?.count || 1;
+                            const pct = Math.round((reg.count / maxCount) * 100);
+                            return (
+                              <div key={idx} className="analytics-bar-item">
+                                <div className="analytics-bar-labels">
+                                  <span>{reg.state} State</span>
+                                  <span>{reg.count} visits ({pct}%)</span>
+                                </div>
+                                <div className="analytics-bar-track">
+                                  <div className="analytics-bar-fill" style={{ width: `${pct}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>No regional visit data recorded yet.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Top Visited Pages */}
+                    <div className="analytics-card">
+                      <div className="analytics-card-header">
+                        <h3>Top Visited Pages</h3>
+                        <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>URL Frequency</span>
+                      </div>
+                      <div className="analytics-bar-list">
+                        {analytics.topPages && analytics.topPages.length > 0 ? (
+                          analytics.topPages.map((pg, idx) => {
+                            const maxPage = analytics.topPages[0]?.views || 1;
+                            const pct = Math.round((pg.views / maxPage) * 100);
+                            return (
+                              <div key={idx} className="analytics-bar-item">
+                                <div className="analytics-bar-labels">
+                                  <span style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{pg.page}</span>
+                                  <span>{pg.views} views</span>
+                                </div>
+                                <div className="analytics-bar-track">
+                                  <div className="analytics-bar-fill gold" style={{ width: `${pct}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>No page views logged yet.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Device Breakdown */}
+                  <div className="analytics-card" style={{ marginBottom: "24px" }}>
+                    <div className="analytics-card-header">
+                      <h3>Visitor Device Breakdown</h3>
+                    </div>
+                    <div className="analytics-device-grid">
+                      {analytics.devices && analytics.devices.length > 0 ? (
+                        analytics.devices.map((d, i) => (
+                          <div key={i} className="analytics-device-card">
+                            <h4>{d.device}</h4>
+                            <p>{d.count} <span style={{ fontSize: "0.85rem", fontWeight: "normal", color: "#64748b" }}>views</span></p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="analytics-device-card">
+                          <h4>Desktop / Mobile</h4>
+                          <p>{analytics.totalViews}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Recent Activity Log */}
+                  <div className="analytics-card">
+                    <div className="analytics-card-header">
+                      <h3>Recent Visitor Activity Stream</h3>
+                      <span style={{ fontSize: "0.8rem", color: "#15803d", fontWeight: "700" }}>● Real-time</span>
+                    </div>
+                    <div className="cms-table-wrapper" style={{ boxShadow: "none", border: "none", margin: 0 }}>
+                      <table className="cms-table">
+                        <thead>
+                          <tr>
+                            <th>Time</th>
+                            <th>Page Accessed</th>
+                            <th>Device</th>
+                            <th>Browser / OS</th>
+                            <th>Resolved Location</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analytics.recentVisits && analytics.recentVisits.length > 0 ? (
+                            analytics.recentVisits.map((v, i) => (
+                              <tr key={i}>
+                                <td>{new Date(v.createdAt).toLocaleTimeString()}</td>
+                                <td><code style={{ color: "#15803d" }}>{v.page}</code></td>
+                                <td>{v.device}</td>
+                                <td>{v.browser} on {v.os}</td>
+                                <td><strong>{v.region || v.city || "Southwest Zone D"}</strong>, {v.country}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="5" style={{ textAlign: "center", color: "#94a3b8" }}>
+                                Waiting for incoming visitor traffic...
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: LEADERSHIP DIRECTORY */}
+              {activeTab === "leadership" && (
+                <div className="cms-tab-content">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                    <div>
+                      <h2>Leadership & Executive Portfolios</h2>
+                      <p className="form-tip">Manage all leadership profiles. Updates sync immediately to Homepage and About Us.</p>
+                    </div>
+                    <button onClick={openAddLeaderModal} className="cms-btn-primary">
+                      <FaPlus /> Add New Officer
+                    </button>
+                  </div>
+
+                  <div className="cms-table-wrapper">
+                    <table className="cms-table">
+                      <thead>
+                        <tr>
+                          <th>Photo</th>
+                          <th>Officer Name</th>
+                          <th>Official Position</th>
+                          <th>Category</th>
+                          <th>State / Coverage</th>
+                          <th>Order</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaders.length > 0 ? (
+                          leaders.map((leader) => (
+                            <tr key={leader._id}>
+                              <td>
+                                <img
+                                  src={leader.photo || "/placeholder.png"}
+                                  alt={leader.fullName}
+                                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", border: "1px solid #e2e8f0" }}
+                                />
+                              </td>
+                              <td>
+                                <strong>{leader.fullName}</strong>
+                                {leader.isFeatured && (
+                                  <span style={{ marginLeft: "8px", background: "#fef08a", color: "#854d0e", fontSize: "0.72rem", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                                    Featured
+                                  </span>
+                                )}
+                              </td>
+                              <td>{leader.position}</td>
+                              <td>
+                                <span style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "600" }}>
+                                  {leader.category}
+                                </span>
+                              </td>
+                              <td>{leader.state}</td>
+                              <td>{leader.displayPriority}</td>
+                              <td>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button onClick={() => openEditLeaderModal(leader)} className="action-btn" title="Edit Profile">
+                                    <FaEdit />
+                                  </button>
+                                  <button onClick={() => handleDeleteLeader(leader._id)} className="action-btn delete" title="Delete Profile">
+                                    <FaTrash />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                              No leadership profiles found. Click "Add New Officer" to create one.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: KYS STUDENT RECORDS */}
+              {activeTab === "kys" && (
+                <div className="cms-tab-content">
+                  <div className="stats-cards" style={{ marginBottom: "24px" }}>
+                    <div className="card highlight">
+                      <h3>Total Registered Students</h3>
+                      <p>{kysStatsDetail?.total || stats.totalStudents}</p>
+                      <span className="card-sub">Southwest Nigerian Tertiary Institutions</span>
+                    </div>
+                    <div className="card">
+                      <h3>Verified Students</h3>
+                      <p>{kysStatsDetail?.verified || 0}</p>
+                      <span className="card-sub">Identity & Enrollment Approved</span>
+                    </div>
+                    <div className="card">
+                      <h3>Pending Verification</h3>
+                      <p>{kysStatsDetail?.pending || 0}</p>
+                      <span className="card-sub">Awaiting Administrative Review</span>
+                    </div>
+                  </div>
+
+                  {/* Filter & Search Bar */}
+                  <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "20px", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
+                    <div style={{ flex: 1, minWidth: "260px", position: "relative" }}>
+                      <input
+                        type="text"
+                        placeholder="Search student by Name, Reg ID, Matric No, or Email..."
+                        value={kysSearch}
+                        onChange={(e) => {
+                          setKysSearch(e.target.value);
+                          fetchKysStudents(e.target.value);
+                        }}
+                        style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", outline: "none" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <label style={{ fontSize: "0.85rem", fontWeight: "600", color: "#475569" }}>State:</label>
+                      <select 
+                        value={kysStateFilter} 
+                        onChange={(e) => setKysStateFilter(e.target.value)}
+                        style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                      >
+                        <option value="All">All States</option>
+                        {SOUTHWEST_STATES.map((st) => (
+                          <option key={st} value={st}>{st}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <label style={{ fontSize: "0.85rem", fontWeight: "600", color: "#475569" }}>Status:</label>
+                      <select 
+                        value={kysStatusFilter} 
+                        onChange={(e) => setKysStatusFilter(e.target.value)}
+                        style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                      >
+                        <option value="All">All Statuses</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Students Table */}
+                  <div className="cms-table-wrapper">
+                    <table className="cms-table">
+                      <thead>
+                        <tr>
+                          <th>Registration ID</th>
+                          <th>Student Name</th>
+                          <th>Institution</th>
+                          <th>Course & Level</th>
+                          <th>Origin State</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {kysLoading ? (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: "center", padding: "30px" }}>Loading students...</td>
+                          </tr>
+                        ) : filteredStudents.length > 0 ? (
+                          filteredStudents.map((st) => (
+                            <tr key={st._id}>
+                              <td>
+                                <strong style={{ color: "#15803d", fontFamily: "monospace" }}>{st.registrationId}</strong>
+                              </td>
+                              <td>
+                                <strong>{st.fullName}</strong>
+                                <br />
+                                <small style={{ color: "#64748b" }}>{st.email}</small>
+                              </td>
+                              <td style={{ maxWidth: "200px" }}>{st.institution}</td>
+                              <td>{st.course} ({st.level} Lvl)</td>
+                              <td>{st.stateOrigin}</td>
+                              <td>
+                                <span className={`status-pill ${st.verificationStatus === "Verified" ? "verified" : "pending"}`}>
+                                  {st.verificationStatus || "Pending"}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button
+                                    onClick={() => handleKysVerifyToggle(st._id, st.verificationStatus)}
+                                    className={`action-btn ${st.verificationStatus === "Verified" ? "unverify" : "verify"}`}
+                                  >
+                                    {st.verificationStatus === "Verified" ? "Set Pending" : "Approve"}
+                                  </button>
+                                  <button
+                                    onClick={() => setSelectedStudent(st)}
+                                    className="action-btn"
+                                    title="View Full Profile & Slip"
+                                  >
+                                    <FaEye />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                              No students found matching your criteria.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: BLOGGER MANAGEMENT (Admin Restricted) */}
+              {activeTab === "bloggers" && (
+                <div className="cms-tab-content">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                    <div>
+                      <h2>Blogger & Press Contributor Management</h2>
+                      <p className="form-tip">Only Central Administration can create and authorize blogger accounts for publishing news and releases.</p>
+                    </div>
+                    <button onClick={() => setShowBloggerModal(true)} className="cms-btn-primary">
+                      <FaPlus /> Create New Blogger
+                    </button>
+                  </div>
+
+                  <div className="blogger-grid">
+                    {bloggers.length > 0 ? (
+                      bloggers.map((b) => (
+                        <div key={b._id} className="blogger-user-card">
+                          <div>
+                            <div className="blogger-card-header">
+                              <div className="blogger-avatar-circle">
+                                {b.name ? b.name.charAt(0).toUpperCase() : "B"}
+                              </div>
+                              <div className="blogger-name-title">
+                                <h4>{b.name}</h4>
+                                <p>{b.email}</p>
+                              </div>
+                            </div>
+                            <div className="blogger-card-body">
+                              <p>{b.bio || "Press contributor authorized to draft and submit reports for the Office of the PRO."}</p>
+                              <div>
+                                <span className={`status-pill ${b.status === "suspended" ? "rejected" : "verified"}`}>
+                                  {b.status === "suspended" ? "Suspended" : "Active Contributor"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="blogger-card-actions">
+                            <button
+                              onClick={() => handleToggleBlogger(b._id)}
+                              className={`action-btn ${b.status === "suspended" ? "verify" : "unverify"}`}
+                              style={{ flex: 1 }}
+                            >
+                              {b.status === "suspended" ? "Reactivate" : "Suspend"}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBlogger(b._id, b.name)}
+                              className="action-btn delete"
+                              title="Delete Blogger"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ color: "#64748b", padding: "20px" }}>No bloggers registered yet. Click "Create New Blogger" to provision an account.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 6: HOMEPAGE CMS */}
               {activeTab === "homepage" && (
                 <div className="cms-tab-content">
                   <form onSubmit={handleSaveHomepage} className="cms-form-card">
-                    <h2>Homepage Content Management</h2>
-                    <p className="form-tip">Changes saved here automatically update the public homepage.</p>
+                    <h2>Homepage Dynamic Hero & Content</h2>
+                    <p className="form-tip">Configure main titles, descriptions, and CTA buttons on the public homepage.</p>
 
-                    <h3 className="section-divider-title">1. Hero Section</h3>
-                    <div className="form-grid-2">
-                      <div className="cms-field">
-                        <label>Hero Main Title</label>
-                        <input
-                          type="text"
-                          value={homepageForm.hero?.title || ""}
-                          onChange={(e) => setHomepageForm({
+                    <div className="cms-field">
+                      <label>Hero Title</label>
+                      <input
+                        type="text"
+                        value={homepageForm.hero?.title || ""}
+                        onChange={(e) =>
+                          setHomepageForm({
                             ...homepageForm,
                             hero: { ...homepageForm.hero, title: e.target.value }
-                          })}
-                        />
-                      </div>
-                      <div className="cms-field">
-                        <label>Hero Subtitle</label>
-                        <input
-                          type="text"
-                          value={homepageForm.hero?.subtitle || ""}
-                          onChange={(e) => setHomepageForm({
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="cms-field">
+                      <label>Hero Subtitle</label>
+                      <input
+                        type="text"
+                        value={homepageForm.hero?.subtitle || ""}
+                        onChange={(e) =>
+                          setHomepageForm({
                             ...homepageForm,
                             hero: { ...homepageForm.hero, subtitle: e.target.value }
-                          })}
-                        />
-                      </div>
+                          })
+                        }
+                      />
                     </div>
 
                     <div className="cms-field">
@@ -430,152 +1077,60 @@ export default function BlogAdminDashboard() {
                       <textarea
                         rows="3"
                         value={homepageForm.hero?.description || ""}
-                        onChange={(e) => setHomepageForm({
-                          ...homepageForm,
-                          hero: { ...homepageForm.hero, description: e.target.value }
-                        })}
+                        onChange={(e) =>
+                          setHomepageForm({
+                            ...homepageForm,
+                            hero: { ...homepageForm.hero, description: e.target.value }
+                          })
+                        }
                       />
                     </div>
 
                     <div className="form-grid-2">
                       <div className="cms-field">
-                        <label>Call-to-Action Text</label>
+                        <label>CTA Button Label</label>
                         <input
                           type="text"
                           value={homepageForm.hero?.ctaText || ""}
-                          onChange={(e) => setHomepageForm({
-                            ...homepageForm,
-                            hero: { ...homepageForm.hero, ctaText: e.target.value }
-                          })}
+                          onChange={(e) =>
+                            setHomepageForm({
+                              ...homepageForm,
+                              hero: { ...homepageForm.hero, ctaText: e.target.value }
+                            })
+                          }
                         />
                       </div>
                       <div className="cms-field">
-                        <label>Call-to-Action Link</label>
+                        <label>CTA Link Destination</label>
                         <input
                           type="text"
                           value={homepageForm.hero?.ctaLink || ""}
-                          onChange={(e) => setHomepageForm({
-                            ...homepageForm,
-                            hero: { ...homepageForm.hero, ctaLink: e.target.value }
-                          })}
+                          onChange={(e) =>
+                            setHomepageForm({
+                              ...homepageForm,
+                              hero: { ...homepageForm.hero, ctaLink: e.target.value }
+                            })
+                          }
                         />
                       </div>
-                    </div>
-
-                    <h3 className="section-divider-title">2. Meet the PRO Section</h3>
-                    <div className="form-grid-2">
-                      <div className="cms-field">
-                        <label>Officer Name</label>
-                        <input
-                          type="text"
-                          value={homepageForm.meetPro?.name || ""}
-                          onChange={(e) => setHomepageForm({
-                            ...homepageForm,
-                            meetPro: { ...homepageForm.meetPro, name: e.target.value }
-                          })}
-                        />
-                      </div>
-                      <div className="cms-field">
-                        <label>Official Title</label>
-                        <input
-                          type="text"
-                          value={homepageForm.meetPro?.title || ""}
-                          onChange={(e) => setHomepageForm({
-                            ...homepageForm,
-                            meetPro: { ...homepageForm.meetPro, title: e.target.value }
-                          })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="cms-field">
-                      <label>Leadership Tagline / Quote</label>
-                      <input
-                        type="text"
-                        value={homepageForm.meetPro?.tagline || ""}
-                        onChange={(e) => setHomepageForm({
-                          ...homepageForm,
-                          meetPro: { ...homepageForm.meetPro, tagline: e.target.value }
-                        })}
-                      />
-                    </div>
-
-                    <div className="cms-field">
-                      <label>Leadership Biography Excerpt</label>
-                      <textarea
-                        rows="4"
-                        value={homepageForm.meetPro?.bio || ""}
-                        onChange={(e) => setHomepageForm({
-                          ...homepageForm,
-                          meetPro: { ...homepageForm.meetPro, bio: e.target.value }
-                        })}
-                      />
                     </div>
 
                     <button type="submit" className="save-cms-btn">
-                      <FaSave /> Save Homepage Configuration
+                      <FaSave /> Save Homepage Content
                     </button>
                   </form>
                 </div>
               )}
 
-              {/* TAB 3: LEADERSHIP DIRECTORY */}
-              {activeTab === "leadership" && (
-                <div className="cms-tab-content">
-                  <div className="tab-header-row">
-                    <div>
-                      <h2>Leadership & Executive Directory</h2>
-                      <p>Manage officers, executives, state PROs, and portfolio profiles.</p>
-                    </div>
-                    <button onClick={() => setShowAddLeaderModal(true)} className="create-btn">
-                      <FaPlus /> Add New Officer
-                    </button>
-                  </div>
-
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Officer Name</th>
-                        <th>Position</th>
-                        <th>Category</th>
-                        <th>State / Zone</th>
-                        <th>Administration</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaders.map((l) => (
-                        <tr key={l._id}>
-                          <td><strong>{l.fullName}</strong></td>
-                          <td>{l.position}</td>
-                          <td><span className="badge-tag">{l.category}</span></td>
-                          <td>{l.state || "Southwest Zone D"}</td>
-                          <td>{l.administration}</td>
-                          <td>
-                            <button
-                              onClick={() => handleDeleteLeader(l._id)}
-                              className="delete-icon-btn"
-                              title="Delete Officer"
-                            >
-                              <FaTrash />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* TAB 4: ORG INFO (ABOUT US) */}
+              {/* TAB 7: IDEALS & ABOUT */}
               {activeTab === "orginfo" && (
                 <div className="cms-tab-content">
                   <form onSubmit={handleSaveOrgInfo} className="cms-form-card">
-                    <h2>Organizational Content & Ideals</h2>
-                    <p className="form-tip">Content for the About Us page, vision, mission, and secretariat contacts.</p>
+                    <h2>Organizational Vision, Mission & Ideals</h2>
+                    <p className="form-tip">These values are published on the official About Us and institutional pages.</p>
 
                     <div className="cms-field">
-                      <label>Our Vision</label>
+                      <label>Institutional Vision</label>
                       <textarea
                         rows="3"
                         value={orgInfoForm.vision || ""}
@@ -584,7 +1139,7 @@ export default function BlogAdminDashboard() {
                     </div>
 
                     <div className="cms-field">
-                      <label>Our Mission</label>
+                      <label>Institutional Mission</label>
                       <textarea
                         rows="3"
                         value={orgInfoForm.mission || ""}
@@ -592,287 +1147,133 @@ export default function BlogAdminDashboard() {
                       />
                     </div>
 
-                    <div className="cms-field">
-                      <label>Guiding Ideology Content</label>
-                      <textarea
-                        rows="4"
-                        value={orgInfoForm.ideology?.content || ""}
-                        onChange={(e) => setOrgInfoForm({
-                          ...orgInfoForm,
-                          ideology: { ...orgInfoForm.ideology, content: e.target.value }
-                        })}
-                      />
-                    </div>
-
-                    <div className="cms-field">
-                      <label>Organizational History</label>
-                      <textarea
-                        rows="4"
-                        value={orgInfoForm.history?.content || ""}
-                        onChange={(e) => setOrgInfoForm({
-                          ...orgInfoForm,
-                          history: { ...orgInfoForm.history, content: e.target.value }
-                        })}
-                      />
-                    </div>
-
                     <button type="submit" className="save-cms-btn">
-                      <FaSave /> Save Organizational Information
+                      <FaSave /> Save Organizational Ideals
                     </button>
                   </form>
                 </div>
               )}
 
-              {/* TAB 5: INQUIRIES */}
+              {/* TAB 8: INQUIRIES */}
               {activeTab === "inquiries" && (
                 <div className="cms-tab-content">
-                  <h2>Student Complaints & Inquiries</h2>
-                  <p className="form-tip">Messages submitted via the public website contact form.</p>
+                  <h2>Student Complaints & Public Inquiries</h2>
+                  <p className="form-tip">Direct messages sent via the public website contact portal.</p>
 
-                  {inquiries.length === 0 ? (
-                    <p>No inquiries submitted yet.</p>
-                  ) : (
-                    <table className="admin-table">
+                  <div className="cms-table-wrapper">
+                    <table className="cms-table">
                       <thead>
                         <tr>
                           <th>Date</th>
-                          <th>Full Name</th>
-                          <th>Institution</th>
-                          <th>Complaint / Message</th>
+                          <th>Sender</th>
+                          <th>Institution / Level</th>
+                          <th>Message</th>
                           <th>Status</th>
-                          <th>Action</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {inquiries.map((inq) => (
-                          <tr key={inq._id}>
-                            <td>{new Date(inq.createdAt).toLocaleDateString()}</td>
-                            <td>
-                              <strong>{inq.fullName}</strong>
-                              <br /><small>{inq.email || inq.phone}</small>
-                            </td>
-                            <td>{inq.school} ({inq.level})</td>
-                            <td style={{ maxWidth: "300px" }}>{inq.message}</td>
-                            <td>
-                              <span className={`status-pill ${inq.status === "Resolved" ? "verified" : inq.status === "In Review" ? "pending" : "rejected"}`}>
-                                {inq.status}
-                              </span>
-                            </td>
-                            <td>
-                              {inq.status !== "Resolved" ? (
+                        {inquiries.length > 0 ? (
+                          inquiries.map((inq) => (
+                            <tr key={inq._id}>
+                              <td>{new Date(inq.createdAt).toLocaleDateString()}</td>
+                              <td>
+                                <strong>{inq.fullName}</strong>
+                                <br /><small>{inq.email || inq.phone}</small>
+                              </td>
+                              <td>{inq.school} ({inq.level})</td>
+                              <td style={{ maxWidth: "280px" }}>{inq.message}</td>
+                              <td>
+                                <span className={`status-pill ${inq.status === "Resolved" ? "verified" : "pending"}`}>
+                                  {inq.status}
+                                </span>
+                              </td>
+                              <td>
                                 <button
-                                  onClick={() => handleUpdateInquiry(inq._id, "Resolved")}
-                                  className="action-btn verify"
+                                  onClick={() => handleUpdateInquiry(inq._id, inq.status === "Resolved" ? "New" : "Resolved")}
+                                  className={`action-btn ${inq.status === "Resolved" ? "unverify" : "verify"}`}
                                 >
-                                  Mark Resolved
+                                  {inq.status === "Resolved" ? "Reopen" : "Mark Resolved"}
                                 </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleUpdateInquiry(inq._id, "New")}
-                                  className="action-btn unverify"
-                                >
-                                  Reopen
-                                </button>
-                              )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                              No inquiries submitted yet.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
-                  )}
-                </div>
-              )}
-
-              {/* TAB 6: AUDIT TRAIL */}
-              {activeTab === "audit" && (
-                <div className="cms-tab-content">
-                  <h2>Administrative Action Audit Trail</h2>
-                  <p className="form-tip">Automatic security logging of content updates, logins, and publishing.</p>
-
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Timestamp</th>
-                        <th>Administrator</th>
-                        <th>Action</th>
-                        <th>Module</th>
-                        <th>Details</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {auditLogs.length > 0 ? (
-                        auditLogs.map((log) => (
-                          <tr key={log._id}>
-                            <td>{new Date(log.createdAt).toLocaleString()}</td>
-                            <td>{log.adminEmail}</td>
-                            <td><code>{log.action}</code></td>
-                            <td>{log.module}</td>
-                            <td><small>{JSON.stringify(log.details)}</small></td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="5">No audit entries logged yet.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* TAB 7: KYS STUDENT RECORDS */}
-              {activeTab === "kys" && (
-                <div className="cms-tab-content">
-                  <div className="cms-form-card">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
-                      <div>
-                        <h2>Know Your Student (KYS) — Database Integration</h2>
-                        <p className="form-tip">
-                          Connected directly to KYS Database (<code style={{ background: "#f0fdf4", padding: "2px 6px", borderRadius: "4px", color: "#166534" }}>cluster0/kys</code>) & API Server.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => window.open("/admin", "_blank")}
-                        className="cms-btn-primary"
-                        style={{ margin: 0, padding: "10px 18px", fontSize: "0.9rem" }}
-                      >
-                        Launch Dedicated KYS Portal ↗
-                      </button>
-                    </div>
-
-                    {/* Stats strip */}
-                    <div className="stats-cards" style={{ marginBottom: "24px" }}>
-                      <div className="card">
-                        <h3>Total Registered</h3>
-                        <p>{kysStatsDetail?.total || stats.totalStudents}</p>
-                        <span className="card-sub">All Southwest Institutions</span>
-                      </div>
-                      <div className="card">
-                        <h3>Verified Students</h3>
-                        <p style={{ color: "#16a34a" }}>{kysStatsDetail?.verified || 0}</p>
-                        <span className="card-sub">Active verified profiles</span>
-                      </div>
-                      <div className="card">
-                        <h3>Pending Review</h3>
-                        <p style={{ color: "#d97706" }}>{kysStatsDetail?.pending || 0}</p>
-                        <span className="card-sub">Awaiting verification</span>
-                      </div>
-                      <div className="card">
-                        <h3>Flagged / Rejected</h3>
-                        <p style={{ color: "#dc2626" }}>{kysStatsDetail?.rejected || 0}</p>
-                        <span className="card-sub">Discrepant records</span>
-                      </div>
-                    </div>
-
-                    {/* Student search form */}
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        fetchKysStudents(kysSearch);
-                      }} 
-                      style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}
-                    >
-                      <input
-                        type="text"
-                        placeholder="Search student by name, Reg ID, institution, state..."
-                        value={kysSearch}
-                        onChange={(e) => setKysSearch(e.target.value)}
-                        style={{ flex: 1, minWidth: "260px", padding: "12px 14px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "0.95rem" }}
-                      />
-                      <button type="submit" className="refresh-btn" style={{ background: "#15803d", color: "#fff", borderColor: "#15803d" }}>
-                        Search KYS
-                      </button>
-                      {kysSearch && (
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            setKysSearch("");
-                            fetchKysStudents("");
-                          }}
-                          className="refresh-btn"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </form>
-
-                    {/* Student table */}
-                    <div className="table-container">
-                      {kysLoading ? (
-                        <p style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>Querying KYS Database...</p>
-                      ) : kysStudents.length === 0 ? (
-                        <div style={{ padding: "36px", textAlign: "center", color: "#64748b" }}>
-                          <p>No student records found in KYS database.</p>
-                          <small>Students registering at <code>/register</code> will appear here automatically.</small>
-                        </div>
-                      ) : (
-                        <table className="student-table">
-                          <thead>
-                            <tr>
-                              <th>S/N</th>
-                              <th>Registration ID</th>
-                              <th>Student Name</th>
-                              <th>Institution</th>
-                              <th>Course & Level</th>
-                              <th>State of Origin</th>
-                              <th>Status</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {kysStudents.map((s, idx) => (
-                              <tr key={s._id}>
-                                <td>{idx + 1}</td>
-                                <td><strong style={{ color: "#166534" }}>{s.registrationId || "PENDING"}</strong></td>
-                                <td>{s.fullName}</td>
-                                <td>{s.institution}</td>
-                                <td>{s.course} ({s.level}L)</td>
-                                <td>{s.stateOrigin}</td>
-                                <td>
-                                  <span className={`status-pill ${s.verificationStatus === "Verified" ? "verified" : s.verificationStatus === "Rejected" ? "rejected" : "pending"}`}>
-                                    {s.verificationStatus || "Pending"}
-                                  </span>
-                                </td>
-                                <td>
-                                  <button
-                                    onClick={() => handleKysVerifyToggle(s._id, s.verificationStatus)}
-                                    className={`action-btn ${s.verificationStatus === "Verified" ? "unverify" : "verify"}`}
-                                  >
-                                    {s.verificationStatus === "Verified" ? "Set Pending" : "Verify Student"}
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
                   </div>
                 </div>
               )}
-            </>
+
+              {/* TAB 9: AUDIT TRAIL */}
+              {activeTab === "audit" && (
+                <div className="cms-tab-content">
+                  <h2>Security Action Audit Trail</h2>
+                  <p className="form-tip">Tamper-evident logs of administrative activities, logins, and publishing.</p>
+
+                  <div className="cms-table-wrapper">
+                    <table className="cms-table">
+                      <thead>
+                        <tr>
+                          <th>Timestamp</th>
+                          <th>Administrator</th>
+                          <th>Action</th>
+                          <th>Module</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditLogs.length > 0 ? (
+                          auditLogs.map((log) => (
+                            <tr key={log._id}>
+                              <td>{new Date(log.createdAt).toLocaleString()}</td>
+                              <td>{log.adminEmail}</td>
+                              <td><code style={{ color: "#15803d" }}>{log.action}</code></td>
+                              <td>{log.module}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="4" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                              No audit records logged yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Add Leader Modal */}
-          {showAddLeaderModal && (
-            <div className="modal-backdrop" onClick={() => setShowAddLeaderModal(false)}>
-              <div className="student-modal-card" onClick={(e) => e.stopPropagation()}>
+          {/* =====================================================================
+              MODAL 1: ADD / EDIT LEADERSHIP PROFILE (With Cloudinary File Upload)
+             ===================================================================== */}
+          {showLeaderModal && (
+            <div className="modal-backdrop" onClick={() => setShowLeaderModal(false)}>
+              <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "620px" }}>
                 <div className="modal-header">
-                  <h3>Add Leadership / Executive Profile</h3>
-                  <button className="close-btn" onClick={() => setShowAddLeaderModal(false)}>
+                  <h3>{editingLeaderId ? "Edit Leadership Profile" : "Add Leadership / Executive Profile"}</h3>
+                  <button className="close-btn" onClick={() => setShowLeaderModal(false)}>
                     <FaTimes />
                   </button>
                 </div>
 
-                <form onSubmit={handleCreateLeader} className="modal-form-body">
+                <form onSubmit={handleSaveLeader} className="modal-form-body">
                   <div className="form-grid-2">
                     <div className="cms-field">
                       <label>Full Name *</label>
                       <input
                         type="text"
                         placeholder="e.g. Comrade Adebayo Smart"
-                        value={newLeader.fullName}
-                        onChange={(e) => setNewLeader({ ...newLeader, fullName: e.target.value })}
+                        value={leaderForm.fullName}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, fullName: e.target.value })}
                         required
                       />
                     </div>
@@ -880,9 +1281,9 @@ export default function BlogAdminDashboard() {
                       <label>Official Position *</label>
                       <input
                         type="text"
-                        placeholder="e.g. Director of Student Affairs"
-                        value={newLeader.position}
-                        onChange={(e) => setNewLeader({ ...newLeader, position: e.target.value })}
+                        placeholder="e.g. Director of Special Duties"
+                        value={leaderForm.position}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, position: e.target.value })}
                         required
                       />
                     </div>
@@ -890,18 +1291,18 @@ export default function BlogAdminDashboard() {
 
                   <div className="form-grid-2">
                     <div className="cms-field">
-                      <label>Leadership Category *</label>
+                      <label>Category *</label>
                       <select
-                        value={newLeader.category}
-                        onChange={(e) => setNewLeader({ ...newLeader, category: e.target.value })}
+                        value={leaderForm.category}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, category: e.target.value })}
                       >
                         <option value="Executive">Executive</option>
+                        <option value="State PRO">State PRO (Southwest JCC)</option>
                         <option value="Director">Director</option>
                         <option value="Deputy Director">Deputy Director</option>
                         <option value="Special Assistant">Special Assistant</option>
                         <option value="Senior Special Assistant">Senior Special Assistant</option>
                         <option value="Media Team">Media Team</option>
-                        <option value="State PRO">State PRO</option>
                       </select>
                     </div>
 
@@ -909,30 +1310,63 @@ export default function BlogAdminDashboard() {
                       <label>State / Coverage</label>
                       <input
                         type="text"
-                        placeholder="e.g. Lagos State, Southwest Zone D"
-                        value={newLeader.state}
-                        onChange={(e) => setNewLeader({ ...newLeader, state: e.target.value })}
+                        placeholder="e.g. Lagos, Ogun, Oyo, Osun, Ondo, Ekiti"
+                        value={leaderForm.state}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, state: e.target.value })}
                       />
                     </div>
                   </div>
 
+                  {/* PHOTOGRAPH UPLOAD (Cloudinary Integration) */}
                   <div className="cms-field">
-                    <label>Photo URL (Cloudinary or Direct Link)</label>
-                    <input
-                      type="url"
-                      placeholder="https://res.cloudinary.com/..."
-                      value={newLeader.photo}
-                      onChange={(e) => setNewLeader({ ...newLeader, photo: e.target.value })}
-                    />
+                    <label>Officer Photograph (Upload to Cloudinary)</label>
+                    
+                    {leaderPhotoPreview ? (
+                      <div className="image-preview-box">
+                        <img src={leaderPhotoPreview} alt="Preview" className="image-preview-img" />
+                        <div className="image-preview-info">
+                          <div className="image-preview-name">
+                            {leaderPhotoFile ? leaderPhotoFile.name : "Current Photo"}
+                          </div>
+                          <span className="image-preview-meta">Ready for Cloudinary upload</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-remove-preview"
+                          onClick={() => {
+                            setLeaderPhotoFile(null);
+                            setLeaderPhotoPreview("");
+                            setLeaderForm({ ...leaderForm, photo: "" });
+                          }}
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="image-upload-dropzone">
+                        <FaCloudUploadAlt style={{ fontSize: "2rem", color: "#16a34a" }} />
+                        <span style={{ fontWeight: "600", fontSize: "0.92rem", color: "#15803d" }}>
+                          Click to Browse or Drag Image Here
+                        </span>
+                        <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                          JPG, PNG, WEBP (Direct upload to Cloudinary)
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoSelect}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="cms-field">
-                    <label>Portfolio Focus & Responsibilities</label>
+                    <label>Portfolio Responsibilities & Focus</label>
                     <textarea
                       rows="3"
-                      placeholder="Describe officer's scope of duty, advocacy projects, or responsibilities..."
-                      value={newLeader.portfolio}
-                      onChange={(e) => setNewLeader({ ...newLeader, portfolio: e.target.value })}
+                      placeholder="Outline key duties, scope of office, and student advocacy projects..."
+                      value={leaderForm.portfolio}
+                      onChange={(e) => setLeaderForm({ ...leaderForm, portfolio: e.target.value })}
                     />
                   </div>
 
@@ -940,19 +1374,196 @@ export default function BlogAdminDashboard() {
                     <label>Officer Biography</label>
                     <textarea
                       rows="3"
-                      placeholder="Brief background and leadership profile..."
-                      value={newLeader.biography}
-                      onChange={(e) => setNewLeader({ ...newLeader, biography: e.target.value })}
+                      placeholder="Brief personal background and leadership profile..."
+                      value={leaderForm.biography}
+                      onChange={(e) => setLeaderForm({ ...leaderForm, biography: e.target.value })}
                     />
                   </div>
 
-                  <button type="submit" className="save-cms-btn">
-                    Create Leadership Profile
+                  <div className="form-grid-2">
+                    <div className="cms-field">
+                      <label>Display Priority (Lower appears first)</label>
+                      <input
+                        type="number"
+                        value={leaderForm.displayPriority}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, displayPriority: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="cms-field" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "24px" }}>
+                      <input
+                        type="checkbox"
+                        id="featured-check"
+                        checked={leaderForm.isFeatured}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, isFeatured: e.target.checked })}
+                        style={{ width: "20px", height: "20px", accentColor: "#15803d" }}
+                      />
+                      <label htmlFor="featured-check" style={{ margin: 0, cursor: "pointer", fontWeight: "600" }}>
+                        Feature on Public Homepage
+                      </label>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="save-cms-btn" disabled={leaderSubmitting}>
+                    {leaderSubmitting ? "Uploading & Saving..." : editingLeaderId ? "Update Profile" : "Publish Leadership Profile"}
                   </button>
                 </form>
               </div>
             </div>
           )}
+
+          {/* =====================================================================
+              MODAL 2: CREATE BLOGGER ACCOUNT (Admin Only)
+             ===================================================================== */}
+          {showBloggerModal && (
+            <div className="modal-backdrop" onClick={() => setShowBloggerModal(false)}>
+              <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px" }}>
+                <div className="modal-header">
+                  <h3>Provision New Blogger Account</h3>
+                  <button className="close-btn" onClick={() => setShowBloggerModal(false)}>
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreateBlogger} className="modal-form-body">
+                  <div className="cms-field">
+                    <label>Contributor Full Name *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Comrade Samuel Adeleke"
+                      value={newBlogger.name}
+                      onChange={(e) => setNewBlogger({ ...newBlogger, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="cms-field">
+                    <label>Contributor Email Address *</label>
+                    <input
+                      type="email"
+                      placeholder="blogger@officeoftheprozoned.com"
+                      value={newBlogger.email}
+                      onChange={(e) => setNewBlogger({ ...newBlogger, email: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="cms-field">
+                    <label>Initial Password *</label>
+                    <input
+                      type="password"
+                      placeholder="Minimum 6 characters"
+                      value={newBlogger.password}
+                      onChange={(e) => setNewBlogger({ ...newBlogger, password: e.target.value })}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+
+                  <div className="cms-field">
+                    <label>Editorial Bio / Campus Beat</label>
+                    <textarea
+                      rows="2"
+                      placeholder="e.g. Lagos State Campus Correspondent"
+                      value={newBlogger.bio}
+                      onChange={(e) => setNewBlogger({ ...newBlogger, bio: e.target.value })}
+                    />
+                  </div>
+
+                  <button type="submit" className="save-cms-btn" disabled={bloggerSubmitting}>
+                    {bloggerSubmitting ? "Creating..." : "Create Blogger Account"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* =====================================================================
+              MODAL 3: VIEW STUDENT DETAILS & VERIFICATION SLIP
+             ===================================================================== */}
+          {selectedStudent && (
+            <div className="modal-backdrop" onClick={() => setSelectedStudent(null)}>
+              <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+                <div className="modal-header">
+                  <h3>KYS Student Registration Record</h3>
+                  <button className="close-btn" onClick={() => setSelectedStudent(null)}>
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div style={{ padding: "20px 24px" }}>
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "10px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#166534", textTransform: "uppercase" }}>Registration ID</span>
+                      <div style={{ fontSize: "1.3rem", fontWeight: "800", color: "#052e16", fontFamily: "monospace" }}>
+                        {selectedStudent.registrationId}
+                      </div>
+                    </div>
+                    <span className={`status-pill ${selectedStudent.verificationStatus === "Verified" ? "verified" : "pending"}`}>
+                      {selectedStudent.verificationStatus || "Pending"}
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "20px" }}>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Full Name</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.fullName}</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Institution</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.institution}</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Course of Study</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.course}</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Academic Level</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.level} Level</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>State of Origin</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.stateOrigin} ({selectedStudent.lgaOrigin})</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Phone / WhatsApp</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.phone}</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Email Address</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.email}</div>
+                    </div>
+                    <div>
+                      <small style={{ color: "#64748b", fontWeight: "600" }}>Bursary Status</small>
+                      <div style={{ fontWeight: "700", color: "#1e293b" }}>
+                        {selectedStudent.receivedBursary ? "Previously Received" : "Never Received"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
+                    <button
+                      onClick={() => {
+                        handleKysVerifyToggle(selectedStudent._id, selectedStudent.verificationStatus);
+                        setSelectedStudent(null);
+                      }}
+                      className={`action-btn ${selectedStudent.verificationStatus === "Verified" ? "unverify" : "verify"}`}
+                      style={{ flex: 1, padding: "10px" }}
+                    >
+                      {selectedStudent.verificationStatus === "Verified" ? "Set to Pending" : "Approve & Verify"}
+                    </button>
+                    <button
+                      onClick={() => window.open(`/verify-status?id=${selectedStudent.registrationId}`, "_blank")}
+                      className="cms-btn-secondary"
+                      style={{ margin: 0, padding: "10px 16px" }}
+                    >
+                      <FaExternalLinkAlt /> Open Verification Slip
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

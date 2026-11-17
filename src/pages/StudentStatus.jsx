@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async";
 import Navbarr from "../components/Navbarr";
 import { FaSearch, FaCheckCircle, FaClock, FaTimesCircle, FaIdCard, FaPrint, FaArrowLeft } from "react-icons/fa";
 import "../index.css";
+import "../styles/kysPortal.css";
 
 const StudentStatus = () => {
   const [identifier, setIdentifier] = useState("");

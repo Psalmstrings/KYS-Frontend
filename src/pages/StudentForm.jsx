@@ -6,6 +6,7 @@ import Navbarr from "../components/Navbarr";
 import StudentCard from "../components/StudentCard";
 import { FaUserGraduate, FaIdCard, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 import "../index.css";
+import "../styles/kysPortal.css";
 
 const SOUTHWEST_STATES = ["Lagos", "Ogun", "Oyo", "Osun", "Ondo", "Ekiti"];
 const OTHER_STATES = [

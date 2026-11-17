@@ -1,0 +1,660 @@
+/* =====================================================================
+   KYS (KNOW YOUR STUDENT) PORTAL STYLESHEET
+   Official Student Portal - NANS Southwest Zone D
+   Brand Theme: Forest Green (#15803d), Deep Forest (#052e16), Gold (#eab308)
+   ===================================================================== */
+
+.kys-portal-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f0fdf4 0%, #f8fafc 40%, #ffffff 100%);
+  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+.kys-page-main {
+  flex: 1;
+  padding: 40px 20px 80px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ================== FORM WRAPPER BOX ================== */
+.form-wrapper-box {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  box-shadow: 0 10px 40px -10px rgba(22, 163, 74, 0.12), 0 4px 12px rgba(0, 0, 0, 0.04);
+  padding: 44px;
+  margin-top: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-header-bar {
+  text-align: center;
+  margin-bottom: 36px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 28px;
+}
+
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid #bbf7d0;
+  margin-bottom: 14px;
+}
+
+.portal-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #052e16;
+  line-height: 1.25;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.portal-desc {
+  font-size: 1.02rem;
+  color: #475569;
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ================== ALERTS ================== */
+.alert-error-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ================== FORM SECTIONS & INPUTS ================== */
+.modern-student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #15803d;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #ecfdf5;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.form-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  background: #ffffff;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* ================== CONSENT & BUTTONS ================== */
+.form-consent-box {
+  background: #f0fdf4;
+  border-left: 4px solid #16a34a;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  color: #166534;
+  line-height: 1.55;
+  margin: 12px 0 8px;
+}
+
+.form-submit-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.kys-submit-btn {
+  background: linear-gradient(135deg, #15803d 0%, #052e16 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 16px 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  box-shadow: 0 8px 24px -4px rgba(21, 128, 61, 0.35);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+}
+
+.kys-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -4px rgba(21, 128, 61, 0.45);
+  background: linear-gradient(135deg, #16a34a 0%, #064e3b 100%);
+}
+
+.kys-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ================== SUCCESS BANNER & VERIFICATION SLIP ================== */
+.student-verification-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 10px;
+}
+
+.success-banner-box {
+  background: linear-gradient(135deg, #15803d 0%, #052e16 100%);
+  color: #ffffff;
+  padding: 32px 24px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(5, 46, 22, 0.2);
+}
+
+.success-check-icon {
+  font-size: 3rem;
+  color: #eab308;
+  margin-bottom: 12px;
+}
+
+.success-banner-box h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.success-banner-box p {
+  color: #bbf7d0;
+  font-size: 1rem;
+}
+
+/* Printable Slip */
+.printable-id-card {
+  background: #ffffff;
+  border: 2px solid #15803d;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+  padding: 32px;
+}
+
+.card-top-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 2px solid #15803d;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.card-logo {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+}
+
+.card-header-titles h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #052e16;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.card-header-titles h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #15803d;
+  margin: 4px 0 8px;
+}
+
+.slip-badge {
+  display: inline-block;
+  background: #eab308;
+  color: #052e16;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+
+.reg-number-banner {
+  background: #f0fdf4;
+  border: 1px dashed #16a34a;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.reg-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.reg-id-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #052e16;
+  letter-spacing: 0.06em;
+  font-family: monospace;
+}
+
+.reg-status-badge {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid #86efac;
+}
+
+.student-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.d-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.d-val {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.card-footer-notice {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+  margin-bottom: 24px;
+}
+
+.card-footer-notice p {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.card-actions-row {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+.print-btn, .new-reg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.print-btn {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.print-btn:hover {
+  background: #166534;
+}
+
+.new-reg-btn {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.new-reg-btn:hover {
+  background: #e2e8f0;
+}
+
+/* ================== STATUS VERIFICATION LOOKUP ================== */
+.status-header-box {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  box-shadow: 0 10px 40px -10px rgba(22, 163, 74, 0.12);
+  padding: 40px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.status-header-box h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #052e16;
+  margin-bottom: 12px;
+}
+
+.status-header-box p {
+  color: #475569;
+  font-size: 0.98rem;
+  max-width: 600px;
+  margin: 0 auto 28px;
+}
+
+.status-search-form {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input-group input {
+  flex: 1;
+  padding: 14px 18px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-input-group input:focus {
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+.search-btn {
+  background: #15803d;
+  color: #ffffff;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.96rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  background: #166534;
+}
+
+.student-status-result-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+  margin-top: 28px;
+}
+
+.result-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.result-badge-col {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.reg-id-pill {
+  background: #052e16;
+  color: #fef08a;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+.result-student-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.result-student-inst {
+  font-size: 1rem;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.result-body-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.result-item {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.r-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.r-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.status-error-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #fecaca;
+  padding: 36px;
+  text-align: center;
+  margin-top: 28px;
+}
+
+.status-error-card h3 {
+  color: #dc2626;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.status-error-card p {
+  color: #475569;
+  margin-bottom: 16px;
+}
+
+.primary-btn {
+  display: inline-block;
+  background: #15803d;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ================== PRINT MEDIA QUERY ================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #student-slip, #student-slip * {
+    visibility: visible;
+  }
+  #student-slip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: 2px solid #000;
+    box-shadow: none;
+    padding: 20px;
+  }
+  .card-actions-row {
+    display: none !important;
+  }
+}
+
+/* ================== MOBILE RESPONSIVENESS ================== */
+@media (max-width: 768px) {
+  .form-wrapper-box {
+    padding: 24px 18px;
+    border-radius: 14px;
+  }
+
+  .portal-title {
+    font-size: 1.6rem;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .student-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .result-body-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-input-group {
+    flex-direction: column;
+  }
+
+  .search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-top-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .reg-number-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-actions-row {
+    flex-direction: column;
+  }
+
+  .print-btn, .new-reg-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

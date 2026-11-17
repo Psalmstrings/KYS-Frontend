@@ -1,6 +1,7 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
+import { usePageTracking } from "./hooks/usePageTracking";
 
 // Public Pages
 import Home from "./pages/Homepage";
@@ -33,9 +34,15 @@ import { ProtectedAdminRoute, ProtectedBloggerRoute } from "./context/BlogContex
 
 import "./index.css";
 
+function PageTracker() {
+  usePageTracking();
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
+      <PageTracker />
       <Routes>
         {/* Public Website Routes */}
         <Route path="/" element={<Home />} />
@@ -47,13 +54,13 @@ function App() {
         <Route path="/register" element={<StudentForm />} />
         <Route path="/verify-status" element={<StudentStatus />} />
 
-        {/* Authentication Routes */}
-        <Route path="/login" element={<AdminLogin />} />
+        {/* Authentication Routes - Centralized */}
+        <Route path="/login" element={<Navigate to="/blogadmin/login" replace />} />
         <Route path="/blogadmin/login" element={<AdminBlogLogin />} />
         <Route path="/blogger/login" element={<BloggerLogin />} />
         <Route path="/blogger/signup" element={<BloggerSignUp />} />
 
-        {/* Central Admin CMS (Protected) */}
+        {/* Central Admin CMS (Unified Control Center) */}
         <Route
           path="/blog/admin"
           element={
@@ -61,6 +68,10 @@ function App() {
               <BlogAdminDashboard />
             </ProtectedAdminRoute>
           }
+        />
+        <Route
+          path="/admin"
+          element={<Navigate to="/blog/admin" replace />}
         />
         <Route
           path="/admin/news"
@@ -121,15 +132,7 @@ function App() {
           }
         />
 
-        {/* KYS Student Portal Admin (Protected) */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+
 
         {/* Fallback 404 */}
         <Route path="*" element={<NotFound />} />
