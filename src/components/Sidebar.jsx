@@ -51,8 +51,8 @@ const Sidebar = () => {
 
         <div className="sidebar-divider"></div>
 
-        <NavLink to="/admin" className="sidebar-link portal-link">
-          <FaUserGraduate /> KYS Student Portal →
+        <NavLink to="/blog/admin?tab=kys" className="sidebar-link portal-link">
+          <FaUserGraduate /> KYS Student Records →
         </NavLink>
 
         <a href="/" target="_blank" rel="noopener noreferrer" className="sidebar-link site-link">

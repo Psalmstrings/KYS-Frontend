@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import Navbar from "../components/Navbar";
@@ -23,9 +24,30 @@ import {
   FaSearch,
   FaFilter,
   FaEye,
-  FaLock
+  FaLock,
+  FaRedo
 } from "react-icons/fa";
 import "../styles/adminDashboard.css";
+
+// Fallback high-res assets for officers so NO broken images can ever appear
+import nansLogo from "../assets/download__4_-removebg-preview.png";
+import proImage from "../assets/IMG_2842.JPG";
+import osunPro from "../assets/COMR IBRAHEEM.jpeg";
+import lagosPro from "../assets/Comrade Ridwan.jpeg";
+import oyoPro from "../assets/COMRADE. ADEYANJU.jpeg";
+import ondoPro from "../assets/JOHNPAU.jpeg";
+import ekitiPro from "../assets/AD Smart.jpeg";
+import ogunPro from "../assets/Celebrity Farmer.jpeg";
+
+const fallbackPhotoMap = {
+  "Comrade Tope Olugbemi (Celebrity Surveyor)": proImage,
+  "Comrade Ibraheem Ayomide Alabi (IB POL)": osunPro,
+  "Comrade Ridwan Ajayi": lagosPro,
+  "Johnpaul Olamakinde Alabi (Makins)": ondoPro,
+  "Comrade Adeyanju Joshua (Aniyikaye)": oyoPro,
+  "Comr Sodiq Hassan (Celebrity Farmer)": ogunPro,
+  "Comrade Adesipe Smart Ayodeji F. (AD Smart)": ekitiPro,
+};
 
 const API_URL = import.meta.env.VITE_API || "https://blogbackend-xzrv.onrender.com/api";
 const KYS_API_URL = import.meta.env.VITE_API_URL || "https://kys-backend.onrender.com";
@@ -33,8 +55,23 @@ const KYS_API_URL = import.meta.env.VITE_API_URL || "https://kys-backend.onrende
 const SOUTHWEST_STATES = ["Lagos", "Ogun", "Oyo", "Osun", "Ondo", "Ekiti"];
 
 export default function BlogAdminDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "overview";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [loading, setLoading] = useState(true);
+
+  // Sync tab with URL search parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const switchTab = (tabName) => {
+    setActiveTab(tabName);
+    setSearchParams({ tab: tabName });
+  };
 
   // Overall counts
   const [stats, setStats] = useState({
@@ -324,7 +361,8 @@ export default function BlogAdminDashboard() {
       isFeatured: Boolean(leader.isFeatured)
     });
     setLeaderPhotoFile(null);
-    setLeaderPhotoPreview(leader.photo || "");
+    const resolvedPhoto = leader.photo || fallbackPhotoMap[leader.fullName] || "";
+    setLeaderPhotoPreview(resolvedPhoto);
     setShowLeaderModal(true);
   };
 
@@ -369,14 +407,13 @@ export default function BlogAdminDashboard() {
         formData.append("photo", leaderForm.photo);
       }
 
-      let res;
       if (editingLeaderId) {
-        res = await axios.put(`${API_URL}/leadership/${editingLeaderId}`, formData, {
+        await axios.put(`${API_URL}/leadership/${editingLeaderId}`, formData, {
           headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
         });
         toast.success("Leadership profile updated successfully!", { id: toastId });
       } else {
-        res = await axios.post(`${API_URL}/leadership`, formData, {
+        await axios.post(`${API_URL}/leadership`, formData, {
           headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
         });
         toast.success("Leadership profile created and published!", { id: toastId });
@@ -470,7 +507,7 @@ export default function BlogAdminDashboard() {
   });
 
   return (
-    <div>
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
       <Navbar />
       <div className="section">
         <Sidebar />
@@ -482,63 +519,63 @@ export default function BlogAdminDashboard() {
               <p className="admin-subtext">Authoritative management of public website content, leadership, KYS verification, bloggers, and visitor analytics.</p>
             </div>
             <button onClick={fetchDashboardData} className="refresh-btn">
-              ↻ Refresh Data
+              <FaRedo /> Refresh Data
             </button>
           </div>
 
-          {/* Clean CMS Tabs Bar (No Emojis, Pure Professionalism) */}
+          {/* Clean CMS Tabs Bar */}
           <div className="cms-tabs-bar">
             <button
               className={`cms-tab-btn ${activeTab === "overview" ? "active" : ""}`}
-              onClick={() => setActiveTab("overview")}
+              onClick={() => switchTab("overview")}
             >
               Overview
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "analytics" ? "active" : ""}`}
-              onClick={() => setActiveTab("analytics")}
+              onClick={() => switchTab("analytics")}
             >
               Analytics & Traffic
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "leadership" ? "active" : ""}`}
-              onClick={() => setActiveTab("leadership")}
+              onClick={() => switchTab("leadership")}
             >
               Leadership Directory
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "kys" ? "active" : ""}`}
-              onClick={() => setActiveTab("kys")}
+              onClick={() => switchTab("kys")}
             >
-              KYS Student Records
+              KYS Student Records ({stats.totalStudents})
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "bloggers" ? "active" : ""}`}
-              onClick={() => setActiveTab("bloggers")}
+              onClick={() => switchTab("bloggers")}
             >
               Blogger Team
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "homepage" ? "active" : ""}`}
-              onClick={() => setActiveTab("homepage")}
+              onClick={() => switchTab("homepage")}
             >
               Homepage CMS
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "orginfo" ? "active" : ""}`}
-              onClick={() => setActiveTab("orginfo")}
+              onClick={() => switchTab("orginfo")}
             >
               Ideals & About
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "inquiries" ? "active" : ""}`}
-              onClick={() => setActiveTab("inquiries")}
+              onClick={() => switchTab("inquiries")}
             >
               Inquiries ({stats.totalInquiries})
             </button>
             <button
               className={`cms-tab-btn ${activeTab === "audit" ? "active" : ""}`}
-              onClick={() => setActiveTab("audit")}
+              onClick={() => switchTab("audit")}
             >
               Security Audit
             </button>
@@ -583,14 +620,14 @@ export default function BlogAdminDashboard() {
                     <div className="analytics-card">
                       <div className="analytics-card-header">
                         <h3>Leadership Management</h3>
-                        <button onClick={openAddLeaderModal} className="cms-btn-primary" style={{ padding: "6px 14px", fontSize: "0.85rem", margin: 0 }}>
+                        <button onClick={openAddLeaderModal} className="cms-btn-primary" style={{ padding: "8px 16px", fontSize: "0.85rem", margin: 0 }}>
                           <FaPlus /> Add Officer
                         </button>
                       </div>
-                      <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: "1.6" }}>
+                      <p style={{ color: "#64748b", fontSize: "0.92rem", lineHeight: "1.6" }}>
                         Manage executives, directors, special assistants, and all 6 Southwest State PROs. Profiles are automatically synced across the Homepage and About Us directory.
                       </p>
-                      <button onClick={() => setActiveTab("leadership")} className="cms-btn-secondary" style={{ marginTop: "14px" }}>
+                      <button onClick={() => switchTab("leadership")} className="cms-btn-secondary" style={{ marginTop: "16px" }}>
                         View Leadership Roster →
                       </button>
                     </div>
@@ -598,14 +635,14 @@ export default function BlogAdminDashboard() {
                     <div className="analytics-card">
                       <div className="analytics-card-header">
                         <h3>Student Verification Registry (KYS)</h3>
-                        <button onClick={() => setActiveTab("kys")} className="cms-btn-primary" style={{ padding: "6px 14px", fontSize: "0.85rem", margin: 0 }}>
+                        <button onClick={() => switchTab("kys")} className="cms-btn-primary" style={{ padding: "8px 16px", fontSize: "0.85rem", margin: 0 }}>
                           Manage Students →
                         </button>
                       </div>
-                      <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: "1.6" }}>
+                      <p style={{ color: "#64748b", fontSize: "0.92rem", lineHeight: "1.6" }}>
                         All student registrations across Lagos, Ogun, Oyo, Osun, Ondo, and Ekiti are directly controlled here. Verify credentials, check bursary data, or print student slips.
                       </p>
-                      <button onClick={() => setActiveTab("kys")} className="cms-btn-secondary" style={{ marginTop: "14px" }}>
+                      <button onClick={() => switchTab("kys")} className="cms-btn-secondary" style={{ marginTop: "16px" }}>
                         Open KYS Directory →
                       </button>
                     </div>
@@ -640,7 +677,7 @@ export default function BlogAdminDashboard() {
                   </div>
 
                   <div className="analytics-grid-2">
-                    {/* Geographic Distribution (Nigerian States & Global) */}
+                    {/* Geographic Distribution */}
                     <div className="analytics-card">
                       <div className="analytics-card-header">
                         <h3>Visitor Locations (Southwest & Nigeria)</h3>
@@ -791,43 +828,50 @@ export default function BlogAdminDashboard() {
                       </thead>
                       <tbody>
                         {leaders.length > 0 ? (
-                          leaders.map((leader) => (
-                            <tr key={leader._id}>
-                              <td>
-                                <img
-                                  src={leader.photo || "/placeholder.png"}
-                                  alt={leader.fullName}
-                                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", border: "1px solid #e2e8f0" }}
-                                />
-                              </td>
-                              <td>
-                                <strong>{leader.fullName}</strong>
-                                {leader.isFeatured && (
-                                  <span style={{ marginLeft: "8px", background: "#fef08a", color: "#854d0e", fontSize: "0.72rem", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
-                                    Featured
+                          leaders.map((leader) => {
+                            const photoSrc = leader.photo || fallbackPhotoMap[leader.fullName] || proImage;
+                            return (
+                              <tr key={leader._id}>
+                                <td>
+                                  <img
+                                    src={photoSrc}
+                                    alt={leader.fullName}
+                                    onError={(e) => {
+                                      e.currentTarget.onerror = null;
+                                      e.currentTarget.src = nansLogo;
+                                    }}
+                                    className="table-officer-photo"
+                                  />
+                                </td>
+                                <td>
+                                  <strong>{leader.fullName}</strong>
+                                  {leader.isFeatured && (
+                                    <span style={{ marginLeft: "8px", background: "#fef08a", color: "#854d0e", fontSize: "0.72rem", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                                      Featured
+                                    </span>
+                                  )}
+                                </td>
+                                <td>{leader.position}</td>
+                                <td>
+                                  <span style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "600" }}>
+                                    {leader.category}
                                   </span>
-                                )}
-                              </td>
-                              <td>{leader.position}</td>
-                              <td>
-                                <span style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "600" }}>
-                                  {leader.category}
-                                </span>
-                              </td>
-                              <td>{leader.state}</td>
-                              <td>{leader.displayPriority}</td>
-                              <td>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                  <button onClick={() => openEditLeaderModal(leader)} className="action-btn" title="Edit Profile">
-                                    <FaEdit />
-                                  </button>
-                                  <button onClick={() => handleDeleteLeader(leader._id)} className="action-btn delete" title="Delete Profile">
-                                    <FaTrash />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
+                                </td>
+                                <td>{leader.state}</td>
+                                <td>{leader.displayPriority}</td>
+                                <td>
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <button onClick={() => openEditLeaderModal(leader)} className="action-btn" title="Edit Profile">
+                                      <FaEdit />
+                                    </button>
+                                    <button onClick={() => handleDeleteLeader(leader._id)} className="action-btn delete" title="Delete Profile">
+                                      <FaTrash />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
                         ) : (
                           <tr>
                             <td colSpan="7" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
@@ -864,7 +908,7 @@ export default function BlogAdminDashboard() {
 
                   {/* Filter & Search Bar */}
                   <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "20px", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
-                    <div style={{ flex: 1, minWidth: "260px", position: "relative" }}>
+                    <div style={{ flex: 1, minWidth: "260px" }}>
                       <input
                         type="text"
                         placeholder="Search student by Name, Reg ID, Matric No, or Email..."
@@ -873,7 +917,7 @@ export default function BlogAdminDashboard() {
                           setKysSearch(e.target.value);
                           fetchKysStudents(e.target.value);
                         }}
-                        style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", outline: "none" }}
+                        style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #cbd5e1", borderRadius: "8px", outline: "none" }}
                       />
                     </div>
 
@@ -882,7 +926,7 @@ export default function BlogAdminDashboard() {
                       <select 
                         value={kysStateFilter} 
                         onChange={(e) => setKysStateFilter(e.target.value)}
-                        style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                        style={{ padding: "9px 12px", borderRadius: "8px", border: "1.5px solid #cbd5e1" }}
                       >
                         <option value="All">All States</option>
                         {SOUTHWEST_STATES.map((st) => (
@@ -896,7 +940,7 @@ export default function BlogAdminDashboard() {
                       <select 
                         value={kysStatusFilter} 
                         onChange={(e) => setKysStatusFilter(e.target.value)}
-                        style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                        style={{ padding: "9px 12px", borderRadius: "8px", border: "1.5px solid #cbd5e1" }}
                       >
                         <option value="All">All Statuses</option>
                         <option value="Verified">Verified</option>
@@ -1253,225 +1297,263 @@ export default function BlogAdminDashboard() {
           )}
 
           {/* =====================================================================
-              MODAL 1: ADD / EDIT LEADERSHIP PROFILE (With Cloudinary File Upload)
+              MODAL 1: ADD / EDIT LEADERSHIP PROFILE (Fixed Footer, Pure Solid White)
              ===================================================================== */}
           {showLeaderModal && (
             <div className="modal-backdrop" onClick={() => setShowLeaderModal(false)}>
-              <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "620px" }}>
-                <div className="modal-header">
-                  <h3>{editingLeaderId ? "Edit Leadership Profile" : "Add Leadership / Executive Profile"}</h3>
-                  <button className="close-btn" onClick={() => setShowLeaderModal(false)}>
-                    <FaTimes />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSaveLeader} className="modal-form-body">
-                  <div className="form-grid-2">
-                    <div className="cms-field">
-                      <label>Full Name *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Comrade Adebayo Smart"
-                        value={leaderForm.fullName}
-                        onChange={(e) => setLeaderForm({ ...leaderForm, fullName: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="cms-field">
-                      <label>Official Position *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Director of Special Duties"
-                        value={leaderForm.position}
-                        onChange={(e) => setLeaderForm({ ...leaderForm, position: e.target.value })}
-                        required
-                      />
-                    </div>
+              <div className="student-modal-card" onClick={(e) => e.stopPropagation()}>
+                <form onSubmit={handleSaveLeader} style={{ display: "contents" }}>
+                  <div className="modal-header">
+                    <h3>{editingLeaderId ? "Edit Leadership Profile" : "Add Leadership / Executive Profile"}</h3>
+                    <button type="button" className="close-btn" onClick={() => setShowLeaderModal(false)}>
+                      <FaTimes />
+                    </button>
                   </div>
 
-                  <div className="form-grid-2">
-                    <div className="cms-field">
-                      <label>Category *</label>
-                      <select
-                        value={leaderForm.category}
-                        onChange={(e) => setLeaderForm({ ...leaderForm, category: e.target.value })}
-                      >
-                        <option value="Executive">Executive</option>
-                        <option value="State PRO">State PRO (Southwest JCC)</option>
-                        <option value="Director">Director</option>
-                        <option value="Deputy Director">Deputy Director</option>
-                        <option value="Special Assistant">Special Assistant</option>
-                        <option value="Senior Special Assistant">Senior Special Assistant</option>
-                        <option value="Media Team">Media Team</option>
-                      </select>
-                    </div>
-
-                    <div className="cms-field">
-                      <label>State / Coverage</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Lagos, Ogun, Oyo, Osun, Ondo, Ekiti"
-                        value={leaderForm.state}
-                        onChange={(e) => setLeaderForm({ ...leaderForm, state: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  {/* PHOTOGRAPH UPLOAD (Cloudinary Integration) */}
-                  <div className="cms-field">
-                    <label>Officer Photograph (Upload to Cloudinary)</label>
-                    
-                    {leaderPhotoPreview ? (
-                      <div className="image-preview-box">
-                        <img src={leaderPhotoPreview} alt="Preview" className="image-preview-img" />
-                        <div className="image-preview-info">
-                          <div className="image-preview-name">
-                            {leaderPhotoFile ? leaderPhotoFile.name : "Current Photo"}
-                          </div>
-                          <span className="image-preview-meta">Ready for Cloudinary upload</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="btn-remove-preview"
-                          onClick={() => {
-                            setLeaderPhotoFile(null);
-                            setLeaderPhotoPreview("");
-                            setLeaderForm({ ...leaderForm, photo: "" });
-                          }}
-                        >
-                          Change
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="image-upload-dropzone">
-                        <FaCloudUploadAlt style={{ fontSize: "2rem", color: "#16a34a" }} />
-                        <span style={{ fontWeight: "600", fontSize: "0.92rem", color: "#15803d" }}>
-                          Click to Browse or Drag Image Here
-                        </span>
-                        <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
-                          JPG, PNG, WEBP (Direct upload to Cloudinary)
-                        </span>
+                  <div className="modal-form-body">
+                    <div className="form-grid-2">
+                      <div className="cms-field">
+                        <label>Full Name *</label>
                         <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoSelect}
+                          type="text"
+                          placeholder="e.g. Comrade Adebayo Smart"
+                          value={leaderForm.fullName}
+                          onChange={(e) => setLeaderForm({ ...leaderForm, fullName: e.target.value })}
+                          required
                         />
                       </div>
-                    )}
-                  </div>
+                      <div className="cms-field">
+                        <label>Official Position *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Director of Special Duties"
+                          value={leaderForm.position}
+                          onChange={(e) => setLeaderForm({ ...leaderForm, position: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
 
-                  <div className="cms-field">
-                    <label>Portfolio Responsibilities & Focus</label>
-                    <textarea
-                      rows="3"
-                      placeholder="Outline key duties, scope of office, and student advocacy projects..."
-                      value={leaderForm.portfolio}
-                      onChange={(e) => setLeaderForm({ ...leaderForm, portfolio: e.target.value })}
-                    />
-                  </div>
+                    <div className="form-grid-2">
+                      <div className="cms-field">
+                        <label>Category *</label>
+                        <select
+                          value={leaderForm.category}
+                          onChange={(e) => setLeaderForm({ ...leaderForm, category: e.target.value })}
+                        >
+                          <option value="Executive">Executive</option>
+                          <option value="State PRO">State PRO (Southwest JCC)</option>
+                          <option value="Director">Director</option>
+                          <option value="Deputy Director">Deputy Director</option>
+                          <option value="Special Assistant">Special Assistant</option>
+                          <option value="Senior Special Assistant">Senior Special Assistant</option>
+                          <option value="Media Team">Media Team</option>
+                        </select>
+                      </div>
 
-                  <div className="cms-field">
-                    <label>Officer Biography</label>
-                    <textarea
-                      rows="3"
-                      placeholder="Brief personal background and leadership profile..."
-                      value={leaderForm.biography}
-                      onChange={(e) => setLeaderForm({ ...leaderForm, biography: e.target.value })}
-                    />
-                  </div>
+                      <div className="cms-field">
+                        <label>State / Coverage</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Lagos, Ogun, Oyo, Osun, Ondo, Ekiti"
+                          value={leaderForm.state}
+                          onChange={(e) => setLeaderForm({ ...leaderForm, state: e.target.value })}
+                        />
+                      </div>
+                    </div>
 
-                  <div className="form-grid-2">
+                    {/* PHOTOGRAPH UPLOAD */}
                     <div className="cms-field">
-                      <label>Display Priority (Lower appears first)</label>
-                      <input
-                        type="number"
-                        value={leaderForm.displayPriority}
-                        onChange={(e) => setLeaderForm({ ...leaderForm, displayPriority: parseInt(e.target.value) || 0 })}
+                      <label>Officer Photograph (Cloudinary Upload)</label>
+                      
+                      {leaderPhotoPreview ? (
+                        <div className="image-preview-box">
+                          <img 
+                            src={leaderPhotoPreview} 
+                            alt="Preview" 
+                            className="image-preview-img"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = nansLogo;
+                            }} 
+                          />
+                          <div className="image-preview-info">
+                            <div className="image-preview-name">
+                              {leaderPhotoFile ? leaderPhotoFile.name : "Current Photo Attached"}
+                            </div>
+                            <span className="image-preview-meta">Ready to save</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn-remove-preview"
+                            onClick={() => {
+                              setLeaderPhotoFile(null);
+                              setLeaderPhotoPreview("");
+                              setLeaderForm({ ...leaderForm, photo: "" });
+                            }}
+                          >
+                            Change
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="image-upload-dropzone">
+                          <FaCloudUploadAlt style={{ fontSize: "2rem", color: "#16a34a" }} />
+                          <span style={{ fontWeight: "700", fontSize: "0.92rem", color: "#15803d" }}>
+                            Click to Browse or Drag Image Here
+                          </span>
+                          <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                            JPG, PNG, WEBP (Direct upload to Cloudinary)
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoSelect}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="cms-field">
+                      <label>Portfolio Responsibilities & Focus</label>
+                      <textarea
+                        rows="3"
+                        placeholder="Outline key duties, scope of office, and student advocacy projects..."
+                        value={leaderForm.portfolio}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, portfolio: e.target.value })}
                       />
                     </div>
-                    <div className="cms-field" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "24px" }}>
-                      <input
-                        type="checkbox"
-                        id="featured-check"
-                        checked={leaderForm.isFeatured}
-                        onChange={(e) => setLeaderForm({ ...leaderForm, isFeatured: e.target.checked })}
-                        style={{ width: "20px", height: "20px", accentColor: "#15803d" }}
+
+                    <div className="cms-field">
+                      <label>Officer Biography</label>
+                      <textarea
+                        rows="3"
+                        placeholder="Brief personal background and leadership profile..."
+                        value={leaderForm.biography}
+                        onChange={(e) => setLeaderForm({ ...leaderForm, biography: e.target.value })}
                       />
-                      <label htmlFor="featured-check" style={{ margin: 0, cursor: "pointer", fontWeight: "600" }}>
-                        Feature on Public Homepage
-                      </label>
+                    </div>
+
+                    <div className="form-grid-2">
+                      <div className="cms-field">
+                        <label>Display Priority (Lower appears first)</label>
+                        <input
+                          type="number"
+                          value={leaderForm.displayPriority}
+                          onChange={(e) => setLeaderForm({ ...leaderForm, displayPriority: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="cms-field" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "24px" }}>
+                        <input
+                          type="checkbox"
+                          id="featured-check"
+                          checked={leaderForm.isFeatured}
+                          onChange={(e) => setLeaderForm({ ...leaderForm, isFeatured: e.target.checked })}
+                          style={{ width: "20px", height: "20px", accentColor: "#15803d" }}
+                        />
+                        <label htmlFor="featured-check" style={{ margin: 0, cursor: "pointer", fontWeight: "600" }}>
+                          Feature on Public Homepage
+                        </label>
+                      </div>
                     </div>
                   </div>
 
-                  <button type="submit" className="save-cms-btn" disabled={leaderSubmitting}>
-                    {leaderSubmitting ? "Uploading & Saving..." : editingLeaderId ? "Update Profile" : "Publish Leadership Profile"}
-                  </button>
+                  <div className="modal-form-footer">
+                    <button 
+                      type="button" 
+                      className="cms-btn-secondary"
+                      onClick={() => setShowLeaderModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="cms-btn-primary" 
+                      disabled={leaderSubmitting}
+                    >
+                      {leaderSubmitting ? "Uploading & Saving..." : editingLeaderId ? "Update Profile" : "Publish Leadership Profile"}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
           )}
 
           {/* =====================================================================
-              MODAL 2: CREATE BLOGGER ACCOUNT (Admin Only)
+              MODAL 2: CREATE BLOGGER ACCOUNT (Fixed Footer)
              ===================================================================== */}
           {showBloggerModal && (
             <div className="modal-backdrop" onClick={() => setShowBloggerModal(false)}>
               <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px" }}>
-                <div className="modal-header">
-                  <h3>Provision New Blogger Account</h3>
-                  <button className="close-btn" onClick={() => setShowBloggerModal(false)}>
-                    <FaTimes />
-                  </button>
-                </div>
-
-                <form onSubmit={handleCreateBlogger} className="modal-form-body">
-                  <div className="cms-field">
-                    <label>Contributor Full Name *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Comrade Samuel Adeleke"
-                      value={newBlogger.name}
-                      onChange={(e) => setNewBlogger({ ...newBlogger, name: e.target.value })}
-                      required
-                    />
+                <form onSubmit={handleCreateBlogger} style={{ display: "contents" }}>
+                  <div className="modal-header">
+                    <h3>Provision New Blogger Account</h3>
+                    <button type="button" className="close-btn" onClick={() => setShowBloggerModal(false)}>
+                      <FaTimes />
+                    </button>
                   </div>
 
-                  <div className="cms-field">
-                    <label>Contributor Email Address *</label>
-                    <input
-                      type="email"
-                      placeholder="blogger@officeoftheprozoned.com"
-                      value={newBlogger.email}
-                      onChange={(e) => setNewBlogger({ ...newBlogger, email: e.target.value })}
-                      required
-                    />
+                  <div className="modal-form-body">
+                    <div className="cms-field">
+                      <label>Contributor Full Name *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Comrade Samuel Adeleke"
+                        value={newBlogger.name}
+                        onChange={(e) => setNewBlogger({ ...newBlogger, name: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="cms-field">
+                      <label>Contributor Email Address *</label>
+                      <input
+                        type="email"
+                        placeholder="blogger@officeoftheprozoned.com"
+                        value={newBlogger.email}
+                        onChange={(e) => setNewBlogger({ ...newBlogger, email: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="cms-field">
+                      <label>Initial Password *</label>
+                      <input
+                        type="password"
+                        placeholder="Minimum 6 characters"
+                        value={newBlogger.password}
+                        onChange={(e) => setNewBlogger({ ...newBlogger, password: e.target.value })}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    <div className="cms-field">
+                      <label>Editorial Bio / Campus Beat</label>
+                      <textarea
+                        rows="2"
+                        placeholder="e.g. Lagos State Campus Correspondent"
+                        value={newBlogger.bio}
+                        onChange={(e) => setNewBlogger({ ...newBlogger, bio: e.target.value })}
+                      />
+                    </div>
                   </div>
 
-                  <div className="cms-field">
-                    <label>Initial Password *</label>
-                    <input
-                      type="password"
-                      placeholder="Minimum 6 characters"
-                      value={newBlogger.password}
-                      onChange={(e) => setNewBlogger({ ...newBlogger, password: e.target.value })}
-                      required
-                      minLength={6}
-                    />
+                  <div className="modal-form-footer">
+                    <button 
+                      type="button" 
+                      className="cms-btn-secondary"
+                      onClick={() => setShowBloggerModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="cms-btn-primary" 
+                      disabled={bloggerSubmitting}
+                    >
+                      {bloggerSubmitting ? "Creating..." : "Create Blogger Account"}
+                    </button>
                   </div>
-
-                  <div className="cms-field">
-                    <label>Editorial Bio / Campus Beat</label>
-                    <textarea
-                      rows="2"
-                      placeholder="e.g. Lagos State Campus Correspondent"
-                      value={newBlogger.bio}
-                      onChange={(e) => setNewBlogger({ ...newBlogger, bio: e.target.value })}
-                    />
-                  </div>
-
-                  <button type="submit" className="save-cms-btn" disabled={bloggerSubmitting}>
-                    {bloggerSubmitting ? "Creating..." : "Create Blogger Account"}
-                  </button>
                 </form>
               </div>
             </div>
@@ -1485,12 +1567,12 @@ export default function BlogAdminDashboard() {
               <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
                 <div className="modal-header">
                   <h3>KYS Student Registration Record</h3>
-                  <button className="close-btn" onClick={() => setSelectedStudent(null)}>
+                  <button type="button" className="close-btn" onClick={() => setSelectedStudent(null)}>
                     <FaTimes />
                   </button>
                 </div>
 
-                <div style={{ padding: "20px 24px" }}>
+                <div className="modal-form-body">
                   <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "10px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#166534", textTransform: "uppercase" }}>Registration ID</span>
@@ -1503,7 +1585,7 @@ export default function BlogAdminDashboard() {
                     </span>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "10px" }}>
                     <div>
                       <small style={{ color: "#64748b", fontWeight: "600" }}>Full Name</small>
                       <div style={{ fontWeight: "700", color: "#1e293b" }}>{selectedStudent.fullName}</div>
@@ -1539,26 +1621,28 @@ export default function BlogAdminDashboard() {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div style={{ display: "flex", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
-                    <button
-                      onClick={() => {
-                        handleKysVerifyToggle(selectedStudent._id, selectedStudent.verificationStatus);
-                        setSelectedStudent(null);
-                      }}
-                      className={`action-btn ${selectedStudent.verificationStatus === "Verified" ? "unverify" : "verify"}`}
-                      style={{ flex: 1, padding: "10px" }}
-                    >
-                      {selectedStudent.verificationStatus === "Verified" ? "Set to Pending" : "Approve & Verify"}
-                    </button>
-                    <button
-                      onClick={() => window.open(`/verify-status?id=${selectedStudent.registrationId}`, "_blank")}
-                      className="cms-btn-secondary"
-                      style={{ margin: 0, padding: "10px 16px" }}
-                    >
-                      <FaExternalLinkAlt /> Open Verification Slip
-                    </button>
-                  </div>
+                <div className="modal-form-footer">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleKysVerifyToggle(selectedStudent._id, selectedStudent.verificationStatus);
+                      setSelectedStudent(null);
+                    }}
+                    className={`action-btn ${selectedStudent.verificationStatus === "Verified" ? "unverify" : "verify"}`}
+                    style={{ padding: "10px 18px", fontSize: "0.88rem" }}
+                  >
+                    {selectedStudent.verificationStatus === "Verified" ? "Set to Pending" : "Approve & Verify"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/verify-status?id=${selectedStudent.registrationId}`, "_blank")}
+                    className="cms-btn-secondary"
+                    style={{ padding: "10px 18px" }}
+                  >
+                    <FaExternalLinkAlt /> Open Verification Slip ↗
+                  </button>
                 </div>
               </div>
             </div>
