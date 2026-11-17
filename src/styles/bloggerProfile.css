@@ -1,8 +1,14 @@
+/* ==========================================================================
+   OFFICE OF THE PRO — NANS SOUTHWEST ZONE D
+   BLOGGER / MEDIA AIDE PROFILE STYLES
+   File: src/styles/bloggerProfile.css
+   ========================================================================== */
+
 .blogger-profile {
-  max-width: 900px;
-  margin: 40px auto;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #222;
+  max-width: 920px;
+  margin: 36px auto;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: #0f172a;
   padding: 0 20px;
 }
 
@@ -10,72 +16,158 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 40px;
-  background: #f5f5f5;
-  padding: 20px;
-  border-radius: 10px;
+  gap: 24px;
+  margin-bottom: 36px;
+  background-color: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .profile-image {
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 20px;
-  border: 3px solid #0077cc;
+  border: 3px solid #15803d;
+  background-color: #f0fdf4;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 260px;
 }
 
 .profile-info h1 {
-  margin: 0;
-  font-size: 2rem;
+  margin: 0 0 6px 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #052e16;
 }
 
 .profile-info .email {
-  color: #555;
-  margin: 5px 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0 0 10px 0;
 }
 
 .profile-info .bio {
-  margin: 10px 0;
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .profile-stats span {
-  margin-right: 20px;
-  font-weight: bold;
-  color: #0077cc;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.blogger-news {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .blogger-news h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #052e16;
   margin-bottom: 20px;
 }
 
 .news-list {
   list-style: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .news-list li {
   display: flex;
   justify-content: space-between;
-  padding: 12px 15px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  background: #fafafa;
-  border-left: 5px solid #ccc;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #94a3b8;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: all 0.2s ease;
+}
+
+.news-list li:hover {
+  background-color: #f1f5f9;
+  transform: translateX(2px);
 }
 
 .news-list li.approved {
-  border-left-color: #00C49F;
+  border-left-color: #16a34a;
 }
 
 .news-list li.pending {
-  border-left-color: #FF8042;
+  border-left-color: #d97706;
 }
 
 .news-title {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1e293b;
+  flex: 1;
 }
 
 .news-status {
-  font-weight: bold;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.news-list li.approved .news-status {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.news-list li.pending .news-status {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .profile-stats {
+    justify-content: center;
+  }
+
+  .blogger-news {
+    padding: 20px;
+  }
 }

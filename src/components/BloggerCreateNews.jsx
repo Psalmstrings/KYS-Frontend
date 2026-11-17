@@ -6,13 +6,13 @@ import Sidebar from "./BloggerSideBar";
 import Navbar from "./BloggerNavbar";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API; 
+const API_URL = import.meta.env.VITE_API || "https://blogbackend-xzrv.onrender.com/api"; 
 
-export default function CreateeNews() {
+export default function BloggerCreateNews() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [coverImageFile, setCoverImageFile] = useState(null); // File object
-  const [category, setCategory] = useState("");
+  const [coverImageFile, setCoverImageFile] = useState(null);
+  const [category, setCategory] = useState("Press Release");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -20,40 +20,39 @@ export default function CreateeNews() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title || !content || !category) {
-      toast.error("Please fill in all required fields");
+    if (!title.trim() || !content.trim() || !category) {
+      toast.error("Please fill in all required fields (Title, Category, Content)");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Use FormData to send files
       const formData = new FormData();
-      formData.append("title", title);
-      formData.append("content", content);
+      formData.append("title", title.trim());
+      formData.append("content", content.trim());
       formData.append("category", category);
       if (coverImageFile) formData.append("coverImage", coverImageFile);
 
-      const { data } = await axios.post(`${API_URL}/news/create`, formData, {
+      const token = localStorage.getItem("blogger_token") || localStorage.getItem("token");
+
+      await axios.post(`${API_URL}/news/create`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      toast.success("News created successfully!");
-      // Clear form
+      toast.success("News submitted successfully for review!");
       setTitle("");
       setContent("");
-      setCategory("");
       setCoverImageFile(null);
 
-      navigate("/blog/profile"); // Redirect to news management page
-      console.log("Created news:", data);
+      navigate("/blog/profile");
     } catch (err) {
       console.error("Error creating news:", err);
-      toast.error("Failed to create news");
+      const msg = err.response?.data?.message || err.message || "Failed to submit news";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -65,43 +64,41 @@ export default function CreateeNews() {
       <div className="section">
         <Sidebar />
         <div className="create-news-container">
-          <h2>Create News</h2>
+          <h2>Submit News Story</h2>
+          <p style={{ color: "#64748b", marginBottom: "24px" }}>
+            Stories submitted by media contributors will be reviewed and published to the official website.
+          </p>
+
           <form className="create-news-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Title*</label>
+              <label>Article Title *</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter news title"
+                placeholder="Enter headline"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Content*</label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Enter news content"
-                rows="6"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Category*</label>
-              <input
-                type="text"
+              <label>Category *</label>
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Enter category"
                 required
-              />
+              >
+                <option value="Press Release">Press Release</option>
+                <option value="Student Welfare">Student Welfare</option>
+                <option value="Events & Summits">Events & Summits</option>
+                <option value="Campus Reports">Campus Reports</option>
+                <option value="Educational Partnership">Educational Partnership</option>
+                <option value="General News">General News</option>
+              </select>
             </div>
 
             <div className="form-group">
-              <label>Cover Image</label>
+              <label>Featured Cover Image</label>
               <input
                 type="file"
                 accept="image/*"
@@ -116,8 +113,19 @@ export default function CreateeNews() {
               )}
             </div>
 
+            <div className="form-group">
+              <label>Article Content *</label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Type or paste the complete news article text..."
+                rows="8"
+                required
+              />
+            </div>
+
             <button type="submit" disabled={loading}>
-              {loading ? "Posting..." : "Create News"}
+              {loading ? "Submitting for Review..." : "Submit Article for Review"}
             </button>
           </form>
         </div>

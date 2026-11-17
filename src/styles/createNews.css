@@ -1,73 +1,148 @@
-/* Container */
+/* ==========================================================================
+   OFFICE OF THE PRO — NANS SOUTHWEST ZONE D
+   NEWS PUBLISHING / ARTICLE EDITOR STYLES
+   File: src/styles/createNews.css
+   ========================================================================== */
+
 .create-news-container {
-  max-width: 700px;
-  margin: 40px auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 840px;
+  width: 100%;
+  margin: 32px auto;
+  padding: 36px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* Form */
+.create-news-container h2 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #052e16;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
 .create-news-form .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .create-news-form label {
-  display: block;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
   margin-bottom: 8px;
 }
 
 .create-news-form input[type="text"],
+.create-news-form select,
 .create-news-form textarea,
 .create-news-form input[type="file"] {
   width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background-color: #ffffff;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.create-news-form input[type="text"]:focus,
+.create-news-form select:focus,
+.create-news-form textarea:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15);
 }
 
 .create-news-form textarea {
+  min-height: 220px;
+  line-height: 1.6;
   resize: vertical;
 }
 
-/* Cover preview */
-.cover-preview {
-  margin-top: 10px;
-  width: 100%;
-  max-height: 300px;
-  object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Button */
-.create-news-form button {
-  background-color: #0077cc;
-  color: #fff;
-  font-weight: 600;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
+/* File Input Styling */
+.create-news-form input[type="file"] {
+  background-color: #f8fafc;
   cursor: pointer;
-  transition: background 0.2s ease;
+  padding: 10px;
 }
 
-.create-news-form button:hover {
-  background-color: #005fa3;
+.create-news-form input[type="file"]::file-selector-button {
+  background-color: #15803d;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background-color 0.2s;
 }
 
-.create-news-form button:disabled {
-  background-color: #ccc;
+.create-news-form input[type="file"]::file-selector-button:hover {
+  background-color: #166534;
+}
+
+/* Cover Preview */
+.cover-preview {
+  margin-top: 14px;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Submit Button */
+.create-news-form button[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #15803d;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(21, 128, 61, 0.25);
+  width: 100%;
+  margin-top: 8px;
+}
+
+.create-news-form button[type="submit"]:hover {
+  background-color: #166534;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(21, 128, 61, 0.35);
+}
+
+.create-news-form button[type="submit"]:disabled {
+  background-color: #9ca3af;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* Responsive */
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
   .create-news-container {
-    padding: 15px;
+    padding: 22px 18px;
+    margin: 16px auto;
+    border-radius: 12px;
+  }
+
+  .create-news-container h2 {
+    font-size: 1.35rem;
   }
 }

@@ -1,17 +1,14 @@
-// ProtectedRoute.jsx
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("role");
+// Protected Route for KYC / Student Admin Portal
+export const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("kys_token") || localStorage.getItem("token");
 
   if (!token) {
-    // If no token, redirect to login
     return <Navigate to="/login" replace />;
   }
 
-  // If token exists, render the page
   return children;
 };
 

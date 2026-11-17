@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /about-us
+Allow: /headlines
+Allow: /news/
+Allow: /register
+Allow: /verify-status
+
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /blog/admin
+Disallow: /blog/admin/*
+Disallow: /login
+Disallow: /blogadmin/login
+Disallow: /blogger/*
+Disallow: /create-news
+
+Sitemap: https://officeoftheprozoned.com/sitemap.xml

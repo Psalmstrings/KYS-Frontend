@@ -1,85 +1,148 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { FaUserCircle, FaNewspaper, FaCheckCircle, FaHourglassHalf, FaPlusCircle, FaSignOutAlt } from "react-icons/fa";
 import "../styles/bloggerProfile.css";
 import Sidebar from "../components/BloggerSideBar";
 import Navbar from "../components/BloggerNavbar";
+
+const API_URL = import.meta.env.VITE_API || "https://blogbackend-xzrv.onrender.com/api";
 
 export default function BloggerProfile() {
   const [blogger, setBlogger] = useState(null);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data (replace with API calls later)
-  const fetchBloggerData = () => {
-    setLoading(true);
-    // Mock blogger info
-    const mockBlogger = {
-      name: "Alice Johnson",
-      email: "alice@example.com",
-      profileImage: "https://i.pravatar.cc/150?img=5",
-      bio: "Passionate about tech and education. Sharing insights and updates with the community.",
-    };
-
-    // Mock news
-    const mockNews = [
-      { _id: "n1", title: "Breaking: New Policy Announced", approved: true },
-      { _id: "n2", title: "Tech Trends 2026", approved: false },
-      { _id: "n3", title: "Community Event Highlights", approved: true },
-      { _id: "n4", title: "Education Reforms Explained", approved: false },
-    ];
-
-    setBlogger(mockBlogger);
-    setNews(mockNews);
-    setLoading(false);
-  };
-
   useEffect(() => {
     fetchBloggerData();
   }, []);
 
-  if (loading) return <p style={{ textAlign: "center", marginTop: "40px" }}>Loading profile...</p>;
-  if (!blogger) return <p>Blogger not found.</p>;
+  const fetchBloggerData = async () => {
+    setLoading(true);
+    try {
+      // 1. Get cached user or fallback
+      const cached = localStorage.getItem("blogger_user");
+      let currentBlogger = cached ? JSON.parse(cached) : null;
+
+      if (!currentBlogger) {
+        currentBlogger = {
+          name: "Press Contributor",
+          email: "blogger@officeoftheprozoned.com",
+          bio: "Official NANS Southwest Zone D Media & Press Contributor."
+        };
+      }
+      setBlogger(currentBlogger);
+
+      // 2. Fetch real news articles
+      const token = localStorage.getItem("blogger_token") || localStorage.getItem("token");
+      const res = await axios.get(`${API_URL}/news/headlines`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (Array.isArray(res.data)) {
+        setNews(res.data);
+      } else if (Array.isArray(res.data?.headlines)) {
+        setNews(res.data.headlines);
+      } else {
+        setNews([]);
+      }
+    } catch (err) {
+      console.error("Error fetching blogger dashboard data:", err);
+      setNews([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const totalNews = news.length;
-  const approvedNews = news.filter(n => n.approved).length;
+  const approvedNews = news.filter(n => n.approved || n.isApproved).length;
   const pendingNews = totalNews - approvedNews;
 
   return (
-   <div>
-    <Navbar />
-     <div className="section">
+    <div>
+      <Navbar />
+      <div className="section">
         <Sidebar />
         <div className="blogger-profile container">
-      <div className="profile-header">
-        <img src={blogger.profileImage} alt={blogger.name} className="profile-image" />
-        <div className="profile-info">
-          <h1>{blogger.name}</h1>
-          <p className="email">{blogger.email}</p>
-          <p className="bio">{blogger.bio}</p>
-          <div className="profile-stats">
-            <span>Total News: {totalNews}</span>
-            <span>Approved: {approvedNews}</span>
-            <span>Pending: {pendingNews}</span>
+          {/* Profile Header Card */}
+          <div className="profile-header">
+            <div className="profile-avatar-wrap">
+              {blogger?.avatar ? (
+                <img src={blogger.avatar} alt={blogger.name} className="profile-image" />
+              ) : (
+                <div className="profile-image-placeholder">
+                  <FaUserCircle />
+                </div>
+              )}
+            </div>
+
+            <div className="profile-info">
+              <span className="profile-role-badge">Official Press Contributor</span>
+              <h1>{blogger?.name || "Press Contributor"}</h1>
+              <p className="email">{blogger?.email || "blogger@officeoftheprozoned.com"}</p>
+              <p className="bio">
+                {blogger?.bio || "Media contributor actively covering campus events, student welfare developments, and executive releases across Southwest Zone D."}
+              </p>
+
+              <div className="profile-stats">
+                <span><FaNewspaper /> Total Articles: {totalNews}</span>
+                <span className="stat-approved"><FaCheckCircle /> Approved: {approvedNews}</span>
+                <span className="stat-pending"><FaHourglassHalf /> Pending: {pendingNews}</span>
+              </div>
+            </div>
+
+            <div className="profile-actions-col">
+              <Link to="/create/news" className="btn-create-news-link">
+                <FaPlusCircle /> Write New Story
+              </Link>
+            </div>
           </div>
+
+          {/* Blogger's News List */}
+          <section className="blogger-news">
+            <div className="blogger-news-header">
+              <h2>Recent Articles & Submissions</h2>
+              <Link to="/news-management" className="view-all-manage-link">
+                Manage All Articles →
+              </Link>
+            </div>
+
+            {loading ? (
+              <p className="loading-text">Loading news records...</p>
+            ) : news.length === 0 ? (
+              <div className="no-news-blogger-box">
+                <p>No articles submitted yet.</p>
+                <Link to="/create/news" className="btn-create-news-link">
+                  <FaPlusCircle /> Publish Your First Story
+                </Link>
+              </div>
+            ) : (
+              <ul className="news-list">
+                {news.slice(0, 10).map((n) => {
+                  const isAppr = n.approved || n.isApproved;
+                  return (
+                    <li key={n._id} className={isAppr ? "approved" : "pending"}>
+                      <div className="news-item-left">
+                        <span className="news-title">{n.title}</span>
+                        <span className="news-meta-date">
+                          {new Date(n.createdAt || Date.now()).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric"
+                          })}
+                        </span>
+                      </div>
+                      <span className={`news-status ${isAppr ? "approved" : "pending"}`}>
+                        {isAppr ? "Approved & Live" : "Pending Approval"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
         </div>
       </div>
-
-      <section className="blogger-news">
-        <h2>My News</h2>
-        {news.length === 0 ? (
-          <p>No news posted yet.</p>
-        ) : (
-          <ul className="news-list">
-            {news.map(n => (
-              <li key={n._id} className={n.approved ? "approved" : "pending"}>
-                <span className="news-title">{n.title}</span>
-                <span className="news-status">{n.approved ? "Approved" : "Pending"}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
-    </div>
-   </div>
   );
 }
