@@ -130,10 +130,13 @@ export default function BlogAdminDashboard() {
   const [leaders, setLeaders] = useState([]);
   const [showLeaderModal, setShowLeaderModal] = useState(false);
   const [editingLeaderId, setEditingLeaderId] = useState(null);
+  const [leadershipFilter, setLeadershipFilter] = useState("all");
+  const [leadershipSearch, setLeadershipSearch] = useState("");
   const [leaderForm, setLeaderForm] = useState({
     fullName: "",
     position: "",
     category: "Executive",
+    isAppointee: false,
     photo: "",
     biography: "",
     portfolio: "",
@@ -332,6 +335,7 @@ export default function BlogAdminDashboard() {
       fullName: "",
       position: "",
       category: "Executive",
+      isAppointee: false,
       photo: "",
       biography: "",
       portfolio: "",
@@ -345,13 +349,48 @@ export default function BlogAdminDashboard() {
     setShowLeaderModal(true);
   };
 
+  // Open Add Appointee Modal (Office of the PRO)
+  const openAddAppointeeModal = () => {
+    setEditingLeaderId(null);
+    setLeaderForm({
+      fullName: "",
+      position: "",
+      category: "Appointee",
+      isAppointee: true,
+      photo: "",
+      biography: "",
+      portfolio: "",
+      state: "Southwest Zone D",
+      administration: "2026-2027",
+      displayPriority: 10,
+      isFeatured: false
+    });
+    setLeaderPhotoFile(null);
+    setLeaderPhotoPreview("");
+    setShowLeaderModal(true);
+  };
+
   // Open Edit Leader Modal
   const openEditLeaderModal = (leader) => {
     setEditingLeaderId(leader._id);
+    const isApp = Boolean(leader.isAppointee) || 
+      leader.category === "Appointee" || 
+      leader.category === "Appointee (Office of the PRO)" ||
+      leader.category === "Special Assistant" ||
+      leader.category === "Senior Special Assistant" ||
+      leader.category === "Media Aide" ||
+      (leader.position && (
+        leader.position.toLowerCase().includes("appointee") ||
+        leader.position.toLowerCase().includes("special assistant") ||
+        leader.position.toLowerCase().includes("aide") ||
+        leader.position.toLowerCase().includes("chief of staff")
+      ));
+
     setLeaderForm({
       fullName: leader.fullName || "",
       position: leader.position || "",
-      category: leader.category || "Executive",
+      category: leader.category || (isApp ? "Appointee" : "Executive"),
+      isAppointee: isApp,
       photo: leader.photo || "",
       biography: leader.biography || "",
       portfolio: leader.portfolio || "",
@@ -383,10 +422,11 @@ export default function BlogAdminDashboard() {
     }
 
     setLeaderSubmitting(true);
+    const isApp = Boolean(leaderForm.isAppointee || leaderForm.category === "Appointee" || leaderForm.category === "Appointee (Office of the PRO)");
     const toastId = toast.loading(
       leaderPhotoFile 
-        ? "Uploading photograph to Cloudinary & saving profile..." 
-        : "Saving leadership profile..."
+        ? `Uploading photograph to Cloudinary & saving ${isApp ? "appointee" : "leader"} profile...` 
+        : `Saving ${isApp ? "appointee" : "leader"} profile...`
     );
 
     try {
@@ -394,6 +434,7 @@ export default function BlogAdminDashboard() {
       formData.append("fullName", leaderForm.fullName);
       formData.append("position", leaderForm.position);
       formData.append("category", leaderForm.category);
+      formData.append("isAppointee", isApp);
       formData.append("state", leaderForm.state);
       formData.append("administration", leaderForm.administration);
       formData.append("displayPriority", leaderForm.displayPriority);
@@ -411,12 +452,12 @@ export default function BlogAdminDashboard() {
         await axios.put(`${API_URL}/leadership/${editingLeaderId}`, formData, {
           headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
         });
-        toast.success("Leadership profile updated successfully!", { id: toastId });
+        toast.success(isApp ? "Office Appointee profile updated!" : "Leadership profile updated successfully!", { id: toastId });
       } else {
         await axios.post(`${API_URL}/leadership`, formData, {
           headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" }
         });
-        toast.success("Leadership profile created and published!", { id: toastId });
+        toast.success(isApp ? "Office of the PRO Appointee added & published!" : "Leadership profile created and published!", { id: toastId });
       }
 
       setShowLeaderModal(false);
@@ -619,13 +660,18 @@ export default function BlogAdminDashboard() {
                   <div className="analytics-grid-2">
                     <div className="analytics-card">
                       <div className="analytics-card-header">
-                        <h3>Leadership Management</h3>
-                        <button onClick={openAddLeaderModal} className="cms-btn-primary" style={{ padding: "8px 16px", fontSize: "0.85rem", margin: 0 }}>
-                          <FaPlus /> Add Officer
-                        </button>
+                        <h3>Leadership & Appointees</h3>
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          <button onClick={openAddAppointeeModal} className="cms-btn-primary" style={{ padding: "7px 12px", fontSize: "0.82rem", margin: 0, backgroundColor: "#15803d" }}>
+                            <FaUserTie /> + Appointee
+                          </button>
+                          <button onClick={openAddLeaderModal} className="cms-btn-secondary" style={{ padding: "7px 12px", fontSize: "0.82rem", margin: 0 }}>
+                            <FaPlus /> + Officer
+                          </button>
+                        </div>
                       </div>
                       <p style={{ color: "#64748b", fontSize: "0.92rem", lineHeight: "1.6" }}>
-                        Manage executives, directors, special assistants, and all 6 Southwest State PROs. Profiles are automatically synced across the Homepage and About Us directory.
+                        Manage executives, official appointees of the Office of the PRO, and all 6 Southwest State PROs. Profiles and picture uploads sync immediately to the About Us leadership directory.
                       </p>
                       <button onClick={() => switchTab("leadership")} className="cms-btn-secondary" style={{ marginTop: "16px" }}>
                         View Leadership Roster →
@@ -800,90 +846,212 @@ export default function BlogAdminDashboard() {
                 </div>
               )}
 
-              {/* TAB 3: LEADERSHIP DIRECTORY */}
-              {activeTab === "leadership" && (
-                <div className="cms-tab-content">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                    <div>
-                      <h2>Leadership & Executive Portfolios</h2>
-                      <p className="form-tip">Manage all leadership profiles. Updates sync immediately to Homepage and About Us.</p>
-                    </div>
-                    <button onClick={openAddLeaderModal} className="cms-btn-primary">
-                      <FaPlus /> Add New Officer
-                    </button>
-                  </div>
+              {/* TAB 3: LEADERSHIP DIRECTORY & APPOINTEES */}
+              {activeTab === "leadership" && (() => {
+                const checkIsAppointee = (l) =>
+                  Boolean(l.isAppointee) ||
+                  l.category === "Appointee" ||
+                  l.category === "Appointee (Office of the PRO)" ||
+                  l.category === "Special Assistant" ||
+                  l.category === "Senior Special Assistant" ||
+                  l.category === "Director" ||
+                  l.category === "Deputy Director" ||
+                  l.category === "Media Aide" ||
+                  (l.position && (
+                    l.position.toLowerCase().includes("appointee") ||
+                    l.position.toLowerCase().includes("special assistant") ||
+                    l.position.toLowerCase().includes("aide") ||
+                    l.position.toLowerCase().includes("chief of staff")
+                  ));
 
-                  <div className="cms-table-wrapper">
-                    <table className="cms-table">
-                      <thead>
-                        <tr>
-                          <th>Photo</th>
-                          <th>Officer Name</th>
-                          <th>Official Position</th>
-                          <th>Category</th>
-                          <th>State / Coverage</th>
-                          <th>Order</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {leaders.length > 0 ? (
-                          leaders.map((leader) => {
-                            const photoSrc = leader.photo || fallbackPhotoMap[leader.fullName] || proImage;
-                            return (
-                              <tr key={leader._id}>
-                                <td>
-                                  <img
-                                    src={photoSrc}
-                                    alt={leader.fullName}
-                                    onError={(e) => {
-                                      e.currentTarget.onerror = null;
-                                      e.currentTarget.src = nansLogo;
-                                    }}
-                                    className="table-officer-photo"
-                                  />
-                                </td>
-                                <td>
-                                  <strong>{leader.fullName}</strong>
-                                  {leader.isFeatured && (
-                                    <span style={{ marginLeft: "8px", background: "#fef08a", color: "#854d0e", fontSize: "0.72rem", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
-                                      Featured
-                                    </span>
-                                  )}
-                                </td>
-                                <td>{leader.position}</td>
-                                <td>
-                                  <span style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "600" }}>
-                                    {leader.category}
-                                  </span>
-                                </td>
-                                <td>{leader.state}</td>
-                                <td>{leader.displayPriority}</td>
-                                <td>
-                                  <div style={{ display: "flex", gap: "8px" }}>
-                                    <button onClick={() => openEditLeaderModal(leader)} className="action-btn" title="Edit Profile">
-                                      <FaEdit />
-                                    </button>
-                                    <button onClick={() => handleDeleteLeader(leader._id)} className="action-btn delete" title="Delete Profile">
-                                      <FaTrash />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
+                const checkIsStatePro = (l) =>
+                  (l.category === "State PRO" || (l.position && l.position.includes("JCC"))) &&
+                  !checkIsAppointee(l);
+
+                const checkIsExecutive = (l) =>
+                  (l.category === "Executive" || l._id === "exec-pro") &&
+                  !checkIsAppointee(l) &&
+                  !checkIsStatePro(l);
+
+                const appointeesCount = leaders.filter(checkIsAppointee).length;
+                const executivesCount = leaders.filter(checkIsExecutive).length;
+                const stateProsCount = leaders.filter(checkIsStatePro).length;
+
+                const filteredLeaders = leaders.filter((l) => {
+                  if (leadershipFilter === "appointees" && !checkIsAppointee(l)) return false;
+                  if (leadershipFilter === "executives" && !checkIsExecutive(l)) return false;
+                  if (leadershipFilter === "statePros" && !checkIsStatePro(l)) return false;
+                  if (leadershipSearch) {
+                    const q = leadershipSearch.toLowerCase();
+                    const matchName = l.fullName?.toLowerCase().includes(q);
+                    const matchPos = l.position?.toLowerCase().includes(q);
+                    const matchState = l.state?.toLowerCase().includes(q);
+                    return matchName || matchPos || matchState;
+                  }
+                  return true;
+                });
+
+                return (
+                  <div className="cms-tab-content">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "15px" }}>
+                      <div>
+                        <h2>Leadership & Appointees Directory</h2>
+                        <p className="form-tip">Manage all leadership profiles, state PROs, and appointees of the Office of the PRO.</p>
+                      </div>
+                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <button
+                          onClick={openAddAppointeeModal}
+                          className="cms-btn-primary"
+                          style={{ backgroundColor: "#15803d", display: "inline-flex", alignItems: "center", gap: "8px" }}
+                        >
+                          <FaUserTie /> + Add Office Appointee
+                        </button>
+                        <button
+                          onClick={openAddLeaderModal}
+                          className="cms-btn-secondary"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+                        >
+                          <FaPlus /> + Add Other Officer
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Filter & Search Toolbar */}
+                    <div style={{ background: "#ffffff", padding: "14px 18px", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "20px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => setLeadershipFilter("all")}
+                          className={`action-btn ${leadershipFilter === "all" ? "verify" : ""}`}
+                          style={{ padding: "6px 14px", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem" }}
+                        >
+                          All ({leaders.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLeadershipFilter("appointees")}
+                          className={`action-btn ${leadershipFilter === "appointees" ? "verify" : ""}`}
+                          style={{
+                            padding: "6px 14px",
+                            borderRadius: "8px",
+                            fontWeight: "700",
+                            fontSize: "0.85rem",
+                            backgroundColor: leadershipFilter === "appointees" ? "#15803d" : "#f0fdf4",
+                            color: leadershipFilter === "appointees" ? "#ffffff" : "#166534",
+                            border: "1px solid #86efac"
+                          }}
+                        >
+                          ⭐ Office Appointees ({appointeesCount})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLeadershipFilter("executives")}
+                          className={`action-btn ${leadershipFilter === "executives" ? "verify" : ""}`}
+                          style={{ padding: "6px 14px", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem" }}
+                        >
+                          Executives ({executivesCount})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLeadershipFilter("statePros")}
+                          className={`action-btn ${leadershipFilter === "statePros" ? "verify" : ""}`}
+                          style={{ padding: "6px 14px", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem" }}
+                        >
+                          State JCC PROs ({stateProsCount})
+                        </button>
+                      </div>
+
+                      <div style={{ minWidth: "220px", flex: 1, maxWidth: "320px" }}>
+                        <input
+                          type="text"
+                          placeholder="Search name, position, state..."
+                          value={leadershipSearch}
+                          onChange={(e) => setLeadershipSearch(e.target.value)}
+                          style={{ width: "100%", padding: "7px 12px", border: "1.5px solid #cbd5e1", borderRadius: "8px", outline: "none", fontSize: "0.85rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="cms-table-wrapper">
+                      <table className="cms-table">
+                        <thead>
                           <tr>
-                            <td colSpan="7" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
-                              No leadership profiles found. Click "Add New Officer" to create one.
-                            </td>
+                            <th>Photo</th>
+                            <th>Officer Name</th>
+                            <th>Official Position</th>
+                            <th>Category / Classification</th>
+                            <th>State / Coverage</th>
+                            <th>Order</th>
+                            <th>Actions</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {filteredLeaders.length > 0 ? (
+                            filteredLeaders.map((leader) => {
+                              const photoSrc = leader.photo || fallbackPhotoMap[leader.fullName] || proImage;
+                              const isApp = checkIsAppointee(leader);
+                              return (
+                                <tr key={leader._id}>
+                                  <td>
+                                    <img
+                                      src={photoSrc}
+                                      alt={leader.fullName}
+                                      onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = nansLogo;
+                                      }}
+                                      className="table-officer-photo"
+                                    />
+                                  </td>
+                                  <td>
+                                    <strong>{leader.fullName}</strong>
+                                    {isApp && (
+                                      <span style={{ marginLeft: "8px", background: "#dcfce7", color: "#166534", border: "1px solid #86efac", fontSize: "0.72rem", padding: "2px 7px", borderRadius: "4px", fontWeight: "700" }}>
+                                        Office Appointee
+                                      </span>
+                                    )}
+                                    {leader.isFeatured && (
+                                      <span style={{ marginLeft: "6px", background: "#fef08a", color: "#854d0e", fontSize: "0.72rem", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                                        Featured
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td>{leader.position}</td>
+                                  <td>
+                                    <span style={{ background: isApp ? "#f0fdf4" : "#f1f5f9", color: isApp ? "#15803d" : "#334155", padding: "4px 8px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "600", border: isApp ? "1px solid #bbf7d0" : "none" }}>
+                                      {leader.category}
+                                    </span>
+                                  </td>
+                                  <td>{leader.state}</td>
+                                  <td>{leader.displayPriority}</td>
+                                  <td>
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                      <button onClick={() => openEditLeaderModal(leader)} className="action-btn" title="Edit Profile">
+                                        <FaEdit />
+                                      </button>
+                                      <button onClick={() => handleDeleteLeader(leader._id)} className="action-btn delete" title="Delete Profile">
+                                        <FaTrash />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan="7" style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                                {leadershipFilter === "appointees"
+                                  ? "No appointees found. Click '+ Add Office Appointee' to register one."
+                                  : "No leadership profiles found matching current filter."}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* TAB 4: KYS STUDENT RECORDS */}
               {activeTab === "kys" && (
@@ -1304,13 +1472,45 @@ export default function BlogAdminDashboard() {
               <div className="student-modal-card" onClick={(e) => e.stopPropagation()}>
                 <form onSubmit={handleSaveLeader} style={{ display: "contents" }}>
                   <div className="modal-header">
-                    <h3>{editingLeaderId ? "Edit Leadership Profile" : "Add Leadership / Executive Profile"}</h3>
+                    <h3>
+                      {editingLeaderId
+                        ? (leaderForm.isAppointee ? "Edit Appointee Profile" : "Edit Leadership Profile")
+                        : (leaderForm.isAppointee ? "Add Appointee — Office of the PRO" : "Add Leadership / Executive Profile")}
+                    </h3>
                     <button type="button" className="close-btn" onClick={() => setShowLeaderModal(false)}>
                       <FaTimes />
                     </button>
                   </div>
 
                   <div className="modal-form-body">
+                    {/* APPOINTEE OF OFFICE OF PRO TOGGLE BANNER */}
+                    <div
+                      style={{
+                        background: (leaderForm.isAppointee || leaderForm.category === "Appointee" || leaderForm.category === "Appointee (Office of the PRO)") ? "#f0fdf4" : "#f8fafc",
+                        border: (leaderForm.isAppointee || leaderForm.category === "Appointee" || leaderForm.category === "Appointee (Office of the PRO)") ? "1.5px solid #86efac" : "1px solid #e2e8f0",
+                        padding: "12px 16px",
+                        borderRadius: "8px",
+                        marginBottom: "16px"
+                      }}
+                    >
+                      <label style={{ display: "flex", alignItems: "center", gap: "10px", margin: 0, cursor: "pointer", fontWeight: "700", color: (leaderForm.isAppointee || leaderForm.category === "Appointee" || leaderForm.category === "Appointee (Office of the PRO)") ? "#15803d" : "#334155", fontSize: "0.92rem" }}>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(leaderForm.isAppointee || leaderForm.category === "Appointee" || leaderForm.category === "Appointee (Office of the PRO)")}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setLeaderForm({
+                              ...leaderForm,
+                              isAppointee: checked,
+                              category: checked && (leaderForm.category === "Executive" || leaderForm.category === "State PRO") ? "Appointee" : leaderForm.category
+                            });
+                          }}
+                          style={{ width: "19px", height: "19px", accentColor: "#15803d" }}
+                        />
+                        <span>⭐ Appointee of the Office of the PRO (Displays in the dedicated Appointees section)</span>
+                      </label>
+                    </div>
+
                     <div className="form-grid-2">
                       <div className="cms-field">
                         <label>Full Name *</label>
@@ -1326,7 +1526,7 @@ export default function BlogAdminDashboard() {
                         <label>Official Position *</label>
                         <input
                           type="text"
-                          placeholder="e.g. Director of Special Duties"
+                          placeholder={leaderForm.isAppointee ? "e.g. Senior Special Assistant to the PRO on Media" : "e.g. Director of Special Duties"}
                           value={leaderForm.position}
                           onChange={(e) => setLeaderForm({ ...leaderForm, position: e.target.value })}
                           required
@@ -1339,15 +1539,22 @@ export default function BlogAdminDashboard() {
                         <label>Category *</label>
                         <select
                           value={leaderForm.category}
-                          onChange={(e) => setLeaderForm({ ...leaderForm, category: e.target.value })}
+                          onChange={(e) => {
+                            const cat = e.target.value;
+                            const isApp = cat === "Appointee" || cat === "Appointee (Office of the PRO)" || cat === "Special Assistant" || cat === "Senior Special Assistant" || cat === "Media Aide" || leaderForm.isAppointee;
+                            setLeaderForm({ ...leaderForm, category: cat, isAppointee: isApp });
+                          }}
                         >
+                          <option value="Appointee">Appointee (Office of the PRO)</option>
                           <option value="Executive">Executive</option>
                           <option value="State PRO">State PRO (Southwest JCC)</option>
-                          <option value="Director">Director</option>
-                          <option value="Deputy Director">Deputy Director</option>
                           <option value="Special Assistant">Special Assistant</option>
                           <option value="Senior Special Assistant">Senior Special Assistant</option>
+                          <option value="Director">Director</option>
+                          <option value="Deputy Director">Deputy Director</option>
+                          <option value="Media Aide">Media Aide</option>
                           <option value="Media Team">Media Team</option>
+                          <option value="Other">Other</option>
                         </select>
                       </div>
 
@@ -1355,7 +1562,7 @@ export default function BlogAdminDashboard() {
                         <label>State / Coverage</label>
                         <input
                           type="text"
-                          placeholder="e.g. Lagos, Ogun, Oyo, Osun, Ondo, Ekiti"
+                          placeholder="e.g. Lagos, Ogun, Oyo, Osun, Ondo, Ekiti, or Southwest Zone D"
                           value={leaderForm.state}
                           onChange={(e) => setLeaderForm({ ...leaderForm, state: e.target.value })}
                         />
@@ -1470,7 +1677,7 @@ export default function BlogAdminDashboard() {
                       className="cms-btn-primary" 
                       disabled={leaderSubmitting}
                     >
-                      {leaderSubmitting ? "Uploading & Saving..." : editingLeaderId ? "Update Profile" : "Publish Leadership Profile"}
+                      {leaderSubmitting ? "Uploading & Saving..." : editingLeaderId ? "Update Profile" : (leaderForm.isAppointee ? "Publish Appointee Profile" : "Publish Leadership Profile")}
                     </button>
                   </div>
                 </form>

@@ -186,9 +186,34 @@ const AboutUs = () => {
     fetchData();
   }, [API_URL]);
 
-  const executives = leaders.filter((l) => l.category === "Executive");
-  const statePros = leaders.filter((l) => l.category === "State PRO" || (l.position && l.position.includes("JCC")));
-  const mediaAndAides = leaders.filter((l) => l.category !== "Executive" && l.category !== "State PRO" && !(l.position && l.position.includes("JCC")));
+  const isAppointeeOfficer = (l) =>
+    Boolean(l.isAppointee) ||
+    l.category === "Appointee" ||
+    l.category === "Appointee (Office of the PRO)" ||
+    l.category === "Special Assistant" ||
+    l.category === "Senior Special Assistant" ||
+    l.category === "Director" ||
+    l.category === "Deputy Director" ||
+    l.category === "Media Aide" ||
+    (l.position && (
+      l.position.toLowerCase().includes("appointee") ||
+      l.position.toLowerCase().includes("special assistant") ||
+      l.position.toLowerCase().includes("aide") ||
+      l.position.toLowerCase().includes("chief of staff")
+    ));
+
+  const isStatePro = (l) =>
+    (l.category === "State PRO" || (l.position && l.position.includes("JCC"))) &&
+    !isAppointeeOfficer(l);
+
+  const executives = leaders.filter(
+    (l) => (l.category === "Executive" || l._id === "exec-pro") && !isAppointeeOfficer(l) && !isStatePro(l)
+  );
+  const appointees = leaders.filter((l) => isAppointeeOfficer(l));
+  const statePros = leaders.filter((l) => isStatePro(l));
+  const otherPersonnel = leaders.filter(
+    (l) => !executives.includes(l) && !appointees.includes(l) && !statePros.includes(l)
+  );
 
   return (
     <div className="about-us-page">
@@ -294,12 +319,25 @@ const AboutUs = () => {
           <div className="section-header-center">
             <span className="badge-tag">Official Administration 2026–2027</span>
             <h2 className="section-title">Leadership & Executive Directory</h2>
-            <p className="section-subtext">Meet the officers and communicators representing students across the Zone</p>
+            <p className="section-subtext">Meet the officers, appointees, and communicators representing students across the Zone</p>
+
+            {/* Quick jump navigation */}
+            <div className="leadership-subnav">
+              <a href="#executives" className="leadership-subnav-btn">
+                Executive Leadership
+              </a>
+              <a href="#appointees" className="leadership-subnav-btn">
+                Office of the PRO Appointees ({appointees.length})
+              </a>
+              <a href="#state-pros" className="leadership-subnav-btn">
+                State JCC PROs ({statePros.length})
+              </a>
+            </div>
           </div>
 
           {/* Executive Section */}
           {executives.length > 0 && (
-            <div className="leadership-group">
+            <div className="leadership-group" id="executives">
               <h3 className="group-title">Executive Leadership</h3>
               <div className="leaders-grid">
                 {executives.map((officer) => (
@@ -308,6 +346,10 @@ const AboutUs = () => {
                       <img
                         src={officer.photo || fallbackPhotoMap[officer.fullName] || proImage}
                         alt={officer.fullName}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = proImage;
+                        }}
                       />
                       <span className="leader-badge">Zonal Executive</span>
                     </div>
@@ -325,9 +367,63 @@ const AboutUs = () => {
             </div>
           )}
 
+          {/* Dedicated Section: Appointees of the Office of the PRO */}
+          <div className="leadership-group appointees-group" id="appointees">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "15px", marginBottom: "25px" }}>
+              <div>
+                <span className="badge-tag" style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", marginBottom: "8px", display: "inline-block" }}>
+                  Official Office of the PRO Appointments
+                </span>
+                <h3 className="group-title" style={{ margin: 0 }}>Appointees of the Office of the PRO</h3>
+                <p style={{ color: "#475569", fontSize: "0.95rem", marginTop: "6px", maxWidth: "750px" }}>
+                  Aides, Directors, Special Assistants, and Senior Special Assistants officially appointed to champion student advocacy, media communication, and strategic governance in the Office of the PRO.
+                </p>
+              </div>
+              <span style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", padding: "6px 14px", borderRadius: "9999px", fontSize: "0.85rem", fontWeight: "700" }}>
+                {appointees.length} Official {appointees.length === 1 ? "Appointee" : "Appointees"}
+              </span>
+            </div>
+
+            {appointees.length > 0 ? (
+              <div className="leaders-grid">
+                {appointees.map((officer) => (
+                  <div key={officer._id} className="leader-card appointee-card" onClick={() => setSelectedLeader(officer)}>
+                    <div className="leader-photo-wrap">
+                      <img
+                        src={officer.photo || fallbackPhotoMap[officer.fullName] || nansLogo}
+                        alt={officer.fullName}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = nansLogo;
+                        }}
+                      />
+                      <span className="leader-badge appointee-badge">PRO Appointee</span>
+                    </div>
+                    <div className="leader-info">
+                      <h4 className="leader-name">{officer.fullName}</h4>
+                      <p className="leader-position">{officer.position}</p>
+                      {officer.state && <p className="leader-state"><FaMapMarkerAlt /> {officer.state}</p>}
+                      <button className="view-portfolio-btn" onClick={(e) => { e.stopPropagation(); setSelectedLeader(officer); }}>
+                        View Profile & Bio →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="appointees-empty-state">
+                <FaUserTie style={{ fontSize: "2.4rem", color: "#16a34a", marginBottom: "12px" }} />
+                <h4 style={{ fontSize: "1.1rem", color: "#1e293b", marginBottom: "6px" }}>Appointee Directory</h4>
+                <p style={{ margin: 0, fontSize: "0.9rem" }}>
+                  Official appointees of the Office of the PRO will appear here once appointed and published by the Secretariat.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* State Joint Campus Committee (JCC) PROs */}
           {statePros.length > 0 && (
-            <div className="leadership-group">
+            <div className="leadership-group" id="state-pros">
               <h3 className="group-title">State Joint Campus Committee (JCC) PROs</h3>
               <div className="leaders-grid">
                 {statePros.map((officer) => (
@@ -336,6 +432,10 @@ const AboutUs = () => {
                       <img
                         src={officer.photo || fallbackPhotoMap[officer.fullName] || nansLogo}
                         alt={officer.fullName}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = nansLogo;
+                        }}
                       />
                       <span className="leader-badge state-badge">{officer.state || "State PRO"}</span>
                     </div>
@@ -353,15 +453,22 @@ const AboutUs = () => {
             </div>
           )}
 
-          {/* Media Team & Appointees */}
-          {mediaAndAides.length > 0 && (
+          {/* Other Directorate & Media Personnel */}
+          {otherPersonnel.length > 0 && (
             <div className="leadership-group">
-              <h3 className="group-title">Directors, Aides & Media Personnel</h3>
+              <h3 className="group-title">Directorate & Media Personnel</h3>
               <div className="leaders-grid">
-                {mediaAndAides.map((officer) => (
+                {otherPersonnel.map((officer) => (
                   <div key={officer._id} className="leader-card" onClick={() => setSelectedLeader(officer)}>
                     <div className="leader-photo-wrap">
-                      <img src={officer.photo || nansLogo} alt={officer.fullName} />
+                      <img
+                        src={officer.photo || nansLogo}
+                        alt={officer.fullName}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = nansLogo;
+                        }}
+                      />
                     </div>
                     <div className="leader-info">
                       <h4 className="leader-name">{officer.fullName}</h4>

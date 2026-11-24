@@ -281,6 +281,72 @@
   color: #ffffff;
 }
 
+.leader-badge.appointee-badge {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.leadership-group.appointees-group {
+  margin-bottom: 70px;
+  background: #ffffff;
+  border: 1px solid var(--border-green);
+  border-radius: var(--radius-lg);
+  padding: 35px 30px;
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.06);
+}
+
+.leadership-group.appointees-group .group-title {
+  border-left-color: #16a34a;
+}
+
+.appointee-card {
+  border: 1.5px solid #e2e8f0;
+}
+
+.appointee-card:hover {
+  border-color: #16a34a;
+}
+
+.appointees-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  color: #64748b;
+}
+
+.leadership-subnav {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.leadership-subnav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.leadership-subnav-btn:hover,
+.leadership-subnav-btn.active {
+  background: #15803d;
+  color: #ffffff;
+  border-color: #15803d;
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.25);
+}
+
 .leader-info {
   padding: 22px;
   display: flex;
