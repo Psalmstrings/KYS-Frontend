@@ -181,15 +181,16 @@ const Homepage = () => {
             const merged = fetchedStatePros.map(p => {
               const matchedPhoto = p.photo || fallbackPhotoMap[p.fullName];
               const defaultObj = defaultStatePros.find(
-                d => d.fullName.toLowerCase().includes(p.fullName.toLowerCase()) || 
-                     (p.state && d.state.toLowerCase().includes(p.state.toLowerCase()))
+                d => (d.fullName || "").toLowerCase().trim() === (p.fullName || "").toLowerCase().trim()
               );
               return {
                 ...p,
-                photo: matchedPhoto || defaultObj?.photo || nansLogo,
-                biography: p.biography || defaultObj?.biography || "",
-                portfolio: p.portfolio || defaultObj?.portfolio || "",
-                responsibilities: (p.responsibilities && p.responsibilities.length > 0) ? p.responsibilities : defaultObj?.responsibilities || []
+                photo: matchedPhoto || (defaultObj ? defaultObj.photo : nansLogo),
+                biography: p.biography && typeof p.biography === "string" ? p.biography.trim() : "",
+                portfolio: p.portfolio && typeof p.portfolio === "string" ? p.portfolio.trim() : "",
+                responsibilities: Array.isArray(p.responsibilities) && p.responsibilities.length > 0
+                  ? p.responsibilities.filter(r => Boolean(r && r.trim()))
+                  : []
               };
             });
             setStatePros(merged);

@@ -162,16 +162,28 @@ const AboutUs = () => {
         if (leadRes?.data?.profiles && Array.isArray(leadRes.data.profiles) && leadRes.data.profiles.length > 0) {
           const merged = leadRes.data.profiles.map(p => {
             const matchedPhoto = p.photo || fallbackPhotoMap[p.fullName];
+            // Only match defaultObj by exact name for fallback photo
             const defaultObj = initialLeaders.find(
-              d => d.fullName.toLowerCase().includes(p.fullName.toLowerCase()) || 
-                   (p.state && d.state && d.state.toLowerCase().includes(p.state.toLowerCase()))
+              d => (d.fullName || "").toLowerCase().trim() === (p.fullName || "").toLowerCase().trim()
             );
+
+            // If Admin does not include Biography, Portfolio & Core Focus, Key Responsibilities, KEEP BLANK!
+            // Never fall back to another person's details
+            const cleanBio = p.biography && typeof p.biography === "string" ? p.biography.trim() : "";
+            const cleanPort = p.portfolio && typeof p.portfolio === "string" ? p.portfolio.trim() : "";
+            let cleanResp = [];
+            if (Array.isArray(p.responsibilities)) {
+              cleanResp = p.responsibilities.filter(r => Boolean(r && r.trim()));
+            } else if (typeof p.responsibilities === "string" && p.responsibilities.trim()) {
+              cleanResp = p.responsibilities.split("\n").map(r => r.trim()).filter(Boolean);
+            }
+
             return {
               ...p,
-              photo: matchedPhoto || defaultObj?.photo || nansLogo,
-              biography: p.biography || defaultObj?.biography || "",
-              portfolio: p.portfolio || defaultObj?.portfolio || "",
-              responsibilities: (p.responsibilities && p.responsibilities.length > 0) ? p.responsibilities : defaultObj?.responsibilities || []
+              photo: matchedPhoto || (defaultObj ? defaultObj.photo : nansLogo),
+              biography: cleanBio,
+              portfolio: cleanPort,
+              responsibilities: cleanResp
             };
           });
           setLeaders(merged);
@@ -504,54 +516,97 @@ const AboutUs = () => {
       {selectedLeader && (
         <div className="modal-backdrop" onClick={() => setSelectedLeader(null)}>
           <div className="leader-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setSelectedLeader(null)}>
+            <button className="modal-close-btn" onClick={() => setSelectedLeader(null)} title="Close Profile">
               <FaTimes />
             </button>
 
+            {/* Profile Header Row */}
             <div className="modal-header-profile">
-              <img
-                src={selectedLeader.photo || fallbackPhotoMap[selectedLeader.fullName] || proImage}
-                alt={selectedLeader.fullName}
-                className="modal-avatar"
-              />
-              <div>
-                <h3>{selectedLeader.fullName}</h3>
-                <p className="modal-position">{selectedLeader.position}</p>
-                {selectedLeader.state && (
-                  <p className="modal-state">
-                    <FaMapMarkerAlt /> {selectedLeader.state}
-                  </p>
+              <div className="modal-avatar-wrapper">
+                <img
+                  src={selectedLeader.photo || fallbackPhotoMap[selectedLeader.fullName] || proImage}
+                  alt={selectedLeader.fullName}
+                  className="modal-avatar"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = nansLogo;
+                  }}
+                />
+                {(selectedLeader.isAppointee || selectedLeader.category === "Appointee" || selectedLeader.category === "Appointee (Office of the PRO)") && (
+                  <span className="modal-avatar-badge">Appointee</span>
                 )}
+              </div>
+              <div className="modal-header-info">
+                <span className="modal-role-tag">
+                  {selectedLeader.category || "Official Profile"}
+                </span>
+                <h3 className="modal-name">{selectedLeader.fullName}</h3>
+                <p className="modal-position">{selectedLeader.position}</p>
+                <div className="modal-meta-row">
+                  {selectedLeader.state && (
+                    <span className="modal-meta-item">
+                      <FaMapMarkerAlt className="meta-icon" /> {selectedLeader.state}
+                    </span>
+                  )}
+                  {selectedLeader.administration && (
+                    <span className="modal-meta-item">
+                      <FaUserTie className="meta-icon" /> Administration {selectedLeader.administration}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
+            {/* Profile Content Body */}
             <div className="modal-body-content">
-              {selectedLeader.biography && (
-                <div className="modal-section">
-                  <h4>Biography</h4>
-                  <p>{selectedLeader.biography}</p>
+              {/* If Admin does not include Biography, Portfolio & Core Focus, and Key Responsibilities, show clear message */}
+              {!selectedLeader.biography && !selectedLeader.portfolio && (!selectedLeader.responsibilities || selectedLeader.responsibilities.length === 0) ? (
+                <div className="modal-empty-details">
+                  <div className="empty-icon-circle">📜</div>
+                  <h4>Official Portfolio Registered</h4>
+                  <p>
+                    Full biographical background, core portfolio focus, and specific duties for this office have not been uploaded by the administration.
+                  </p>
                 </div>
-              )}
+              ) : (
+                <>
+                  {selectedLeader.biography && (
+                    <div className="modal-section">
+                      <div className="modal-section-title-wrap">
+                        <span className="section-pill-icon">👤</span>
+                        <h4>Biography & Background</h4>
+                      </div>
+                      <p className="modal-text">{selectedLeader.biography}</p>
+                    </div>
+                  )}
 
-              {selectedLeader.portfolio && (
-                <div className="modal-section">
-                  <h4>Portfolio & Core Focus</h4>
-                  <p>{selectedLeader.portfolio}</p>
-                </div>
-              )}
+                  {selectedLeader.portfolio && (
+                    <div className="modal-section">
+                      <div className="modal-section-title-wrap">
+                        <span className="section-pill-icon">🎯</span>
+                        <h4>Portfolio & Core Focus</h4>
+                      </div>
+                      <p className="modal-text">{selectedLeader.portfolio}</p>
+                    </div>
+                  )}
 
-              {selectedLeader.responsibilities && selectedLeader.responsibilities.length > 0 && (
-                <div className="modal-section">
-                  <h4>Key Responsibilities</h4>
-                  <ul className="modal-responsibilities">
-                    {selectedLeader.responsibilities.map((r, i) => (
-                      <li key={i}>
-                        <FaCheckCircle className="check-bullet" />
-                        <span>{r}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  {selectedLeader.responsibilities && selectedLeader.responsibilities.length > 0 && (
+                    <div className="modal-section">
+                      <div className="modal-section-title-wrap">
+                        <span className="section-pill-icon">⚡</span>
+                        <h4>Key Responsibilities & Scope</h4>
+                      </div>
+                      <ul className="modal-responsibilities">
+                        {selectedLeader.responsibilities.map((r, i) => (
+                          <li key={i}>
+                            <FaCheckCircle className="check-bullet" />
+                            <span>{r}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
