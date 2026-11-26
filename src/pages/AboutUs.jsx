@@ -206,13 +206,28 @@ const AboutUs = () => {
     (l.category === "State PRO" || (l.position && l.position.includes("JCC"))) &&
     !isAppointeeOfficer(l);
 
-  const executives = leaders.filter(
-    (l) => (l.category === "Executive" || l._id === "exec-pro") && !isAppointeeOfficer(l) && !isStatePro(l)
+  const sortByHierarchy = (list) => {
+    return [...list].sort((a, b) => {
+      const orderA = a.displayPriority !== undefined ? Number(a.displayPriority) : 999;
+      const orderB = b.displayPriority !== undefined ? Number(b.displayPriority) : 999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (a.fullName || "").localeCompare(b.fullName || "");
+    });
+  };
+
+  const executives = sortByHierarchy(
+    leaders.filter(
+      (l) => (l.category === "Executive" || l._id === "exec-pro") && !isAppointeeOfficer(l) && !isStatePro(l)
+    )
   );
-  const appointees = leaders.filter((l) => isAppointeeOfficer(l));
-  const statePros = leaders.filter((l) => isStatePro(l));
-  const otherPersonnel = leaders.filter(
-    (l) => !executives.includes(l) && !appointees.includes(l) && !statePros.includes(l)
+  const appointees = sortByHierarchy(leaders.filter((l) => isAppointeeOfficer(l)));
+  const statePros = sortByHierarchy(leaders.filter((l) => isStatePro(l)));
+  const otherPersonnel = sortByHierarchy(
+    leaders.filter(
+      (l) => !executives.some(e => e._id === l._id) && 
+             !appointees.some(a => a._id === l._id) && 
+             !statePros.some(s => s._id === l._id)
+    )
   );
 
   return (

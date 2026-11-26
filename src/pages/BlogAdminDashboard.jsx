@@ -25,7 +25,10 @@ import {
   FaFilter,
   FaEye,
   FaLock,
-  FaRedo
+  FaRedo,
+  FaArrowUp,
+  FaArrowDown,
+  FaSortAmountDown
 } from "react-icons/fa";
 import "../styles/adminDashboard.css";
 
@@ -148,6 +151,144 @@ export default function BlogAdminDashboard() {
   const [leaderPhotoFile, setLeaderPhotoFile] = useState(null);
   const [leaderPhotoPreview, setLeaderPhotoPreview] = useState("");
   const [leaderSubmitting, setLeaderSubmitting] = useState(false);
+
+  // Leadership hierarchy & reordering state
+  const [showHierarchyModal, setShowHierarchyModal] = useState(false);
+  const [hierarchyCategory, setHierarchyCategory] = useState("appointees");
+  const [hierarchyList, setHierarchyList] = useState([]);
+  const [hierarchySaving, setHierarchySaving] = useState(false);
+
+  // Classification helper functions
+  const checkIsAppointee = (l) =>
+    Boolean(l.isAppointee) ||
+    l.category === "Appointee" ||
+    l.category === "Appointee (Office of the PRO)" ||
+    l.category === "Special Assistant" ||
+    l.category === "Senior Special Assistant" ||
+    l.category === "Director" ||
+    l.category === "Deputy Director" ||
+    l.category === "Media Aide" ||
+    (l.position && (
+      l.position.toLowerCase().includes("appointee") ||
+      l.position.toLowerCase().includes("special assistant") ||
+      l.position.toLowerCase().includes("aide") ||
+      l.position.toLowerCase().includes("chief of staff")
+    ));
+
+  const checkIsStatePro = (l) =>
+    (l.category === "State PRO" || (l.position && l.position.includes("JCC"))) &&
+    !checkIsAppointee(l);
+
+  const checkIsExecutive = (l) =>
+    (l.category === "Executive" || l._id === "exec-pro") &&
+    !checkIsAppointee(l) &&
+    !checkIsStatePro(l);
+
+  const getFilteredHierarchySubset = (cat, srcList = leaders) => {
+    let subset = [...srcList];
+    if (cat === "appointees") {
+      subset = subset.filter(checkIsAppointee);
+    } else if (cat === "executives") {
+      subset = subset.filter(checkIsExecutive);
+    } else if (cat === "statePros") {
+      subset = subset.filter(checkIsStatePro);
+    }
+    return subset.sort((a, b) => (Number(a.displayPriority) || 0) - (Number(b.displayPriority) || 0));
+  };
+
+  const openHierarchyModal = (defaultCat = "appointees") => {
+    const chosenCat = defaultCat === "all" ? "appointees" : defaultCat;
+    setHierarchyCategory(chosenCat);
+    setHierarchyList(getFilteredHierarchySubset(chosenCat));
+    setShowHierarchyModal(true);
+  };
+
+  const switchHierarchyCategory = (cat) => {
+    setHierarchyCategory(cat);
+    setHierarchyList(getFilteredHierarchySubset(cat));
+  };
+
+  const moveHierarchyItem = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= hierarchyList.length) return;
+    const updated = [...hierarchyList];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    const reindexed = updated.map((item, idx) => ({
+      ...item,
+      displayPriority: idx + 1
+    }));
+    setHierarchyList(reindexed);
+  };
+
+  const saveHierarchyOrder = async () => {
+    setHierarchySaving(true);
+    const toastId = toast.loading("Saving hierarchy display order...");
+    try {
+      const itemsToUpdate = hierarchyList.map((item, idx) => ({
+        id: item._id,
+        displayPriority: idx + 1
+      }));
+
+      await axios.put(`${API_URL}/leadership/reorder`, { items: itemsToUpdate }, {
+        headers: getAuthHeader()
+      });
+
+      toast.success("Leadership hierarchy updated successfully!", { id: toastId });
+      setShowHierarchyModal(false);
+      fetchDashboardData();
+    } catch (err) {
+      console.error("Hierarchy save error:", err);
+      toast.error(err.response?.data?.message || "Failed to save hierarchy order", { id: toastId });
+    } finally {
+      setHierarchySaving(false);
+    }
+  };
+
+  const handleQuickMove = async (leader, direction, currentFilteredList) => {
+    const currentIndex = currentFilteredList.findIndex(l => l._id === leader._id);
+    const targetIndex = currentIndex + direction;
+    if (currentIndex === -1 || targetIndex < 0 || targetIndex >= currentFilteredList.length) return;
+
+    const toastId = toast.loading(`Moving ${leader.fullName}...`);
+    try {
+      const updatedList = [...currentFilteredList];
+      const temp = updatedList[currentIndex];
+      updatedList[currentIndex] = updatedList[targetIndex];
+      updatedList[targetIndex] = temp;
+
+      const itemsToUpdate = updatedList.map((item, idx) => ({
+        id: item._id,
+        displayPriority: idx + 1
+      }));
+
+      await axios.put(`${API_URL}/leadership/reorder`, { items: itemsToUpdate }, {
+        headers: getAuthHeader()
+      });
+
+      toast.success(`Position updated! ${leader.fullName} moved ${direction < 0 ? "up" : "down"}.`, { id: toastId });
+      fetchDashboardData();
+    } catch (err) {
+      toast.error("Failed to reorder position", { id: toastId });
+    }
+  };
+
+  const handleUpdatePriority = async (leaderId, newPriority) => {
+    const num = parseInt(newPriority, 10);
+    if (isNaN(num)) return;
+    try {
+      await axios.put(`${API_URL}/leadership/reorder`, {
+        items: [{ id: leaderId, displayPriority: num }]
+      }, {
+        headers: getAuthHeader()
+      });
+      toast.success("Order priority updated!");
+      fetchDashboardData();
+    } catch (err) {
+      toast.error("Failed to update priority");
+    }
+  };
 
   // Blogger Management state
   const [bloggers, setBloggers] = useState([]);
@@ -848,57 +989,42 @@ export default function BlogAdminDashboard() {
 
               {/* TAB 3: LEADERSHIP DIRECTORY & APPOINTEES */}
               {activeTab === "leadership" && (() => {
-                const checkIsAppointee = (l) =>
-                  Boolean(l.isAppointee) ||
-                  l.category === "Appointee" ||
-                  l.category === "Appointee (Office of the PRO)" ||
-                  l.category === "Special Assistant" ||
-                  l.category === "Senior Special Assistant" ||
-                  l.category === "Director" ||
-                  l.category === "Deputy Director" ||
-                  l.category === "Media Aide" ||
-                  (l.position && (
-                    l.position.toLowerCase().includes("appointee") ||
-                    l.position.toLowerCase().includes("special assistant") ||
-                    l.position.toLowerCase().includes("aide") ||
-                    l.position.toLowerCase().includes("chief of staff")
-                  ));
-
-                const checkIsStatePro = (l) =>
-                  (l.category === "State PRO" || (l.position && l.position.includes("JCC"))) &&
-                  !checkIsAppointee(l);
-
-                const checkIsExecutive = (l) =>
-                  (l.category === "Executive" || l._id === "exec-pro") &&
-                  !checkIsAppointee(l) &&
-                  !checkIsStatePro(l);
-
                 const appointeesCount = leaders.filter(checkIsAppointee).length;
                 const executivesCount = leaders.filter(checkIsExecutive).length;
                 const stateProsCount = leaders.filter(checkIsStatePro).length;
 
-                const filteredLeaders = leaders.filter((l) => {
-                  if (leadershipFilter === "appointees" && !checkIsAppointee(l)) return false;
-                  if (leadershipFilter === "executives" && !checkIsExecutive(l)) return false;
-                  if (leadershipFilter === "statePros" && !checkIsStatePro(l)) return false;
-                  if (leadershipSearch) {
-                    const q = leadershipSearch.toLowerCase();
-                    const matchName = l.fullName?.toLowerCase().includes(q);
-                    const matchPos = l.position?.toLowerCase().includes(q);
-                    const matchState = l.state?.toLowerCase().includes(q);
-                    return matchName || matchPos || matchState;
-                  }
-                  return true;
-                });
+                const filteredLeaders = leaders
+                  .filter((l) => {
+                    if (leadershipFilter === "appointees" && !checkIsAppointee(l)) return false;
+                    if (leadershipFilter === "executives" && !checkIsExecutive(l)) return false;
+                    if (leadershipFilter === "statePros" && !checkIsStatePro(l)) return false;
+                    if (leadershipSearch) {
+                      const q = leadershipSearch.toLowerCase();
+                      const matchName = l.fullName?.toLowerCase().includes(q);
+                      const matchPos = l.position?.toLowerCase().includes(q);
+                      const matchState = l.state?.toLowerCase().includes(q);
+                      return matchName || matchPos || matchState;
+                    }
+                    return true;
+                  })
+                  .sort((a, b) => (Number(a.displayPriority) || 0) - (Number(b.displayPriority) || 0));
 
                 return (
                   <div className="cms-tab-content">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "15px" }}>
                       <div>
                         <h2>Leadership & Appointees Directory</h2>
-                        <p className="form-tip">Manage all leadership profiles, state PROs, and appointees of the Office of the PRO.</p>
+                        <p className="form-tip">Manage all leadership profiles, state PROs, and arrange the hierarchy/order of how they appear on the live site.</p>
                       </div>
                       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => openHierarchyModal(leadershipFilter === "all" ? "appointees" : leadershipFilter)}
+                          className="cms-btn-secondary"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "8px", border: "1.5px solid #15803d", color: "#15803d", fontWeight: "700" }}
+                        >
+                          <FaSortAmountDown /> Arrange Hierarchy / Order
+                        </button>
                         <button
                           onClick={openAddAppointeeModal}
                           className="cms-btn-primary"
@@ -981,13 +1107,13 @@ export default function BlogAdminDashboard() {
                             <th>Official Position</th>
                             <th>Category / Classification</th>
                             <th>State / Coverage</th>
-                            <th>Order</th>
+                            <th title="Lower number displays first">Display Hierarchy</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredLeaders.length > 0 ? (
-                            filteredLeaders.map((leader) => {
+                            filteredLeaders.map((leader, leaderIdx) => {
                               const photoSrc = leader.photo || fallbackPhotoMap[leader.fullName] || proImage;
                               const isApp = checkIsAppointee(leader);
                               return (
@@ -1023,7 +1149,77 @@ export default function BlogAdminDashboard() {
                                     </span>
                                   </td>
                                   <td>{leader.state}</td>
-                                  <td>{leader.displayPriority}</td>
+                                  <td style={{ minWidth: "120px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <input
+                                        type="number"
+                                        defaultValue={leader.displayPriority || 0}
+                                        key={leader.displayPriority}
+                                        onBlur={(e) => {
+                                          const val = parseInt(e.target.value, 10);
+                                          if (!isNaN(val) && val !== leader.displayPriority) {
+                                            handleUpdatePriority(leader._id, val);
+                                          }
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            e.target.blur();
+                                          }
+                                        }}
+                                        title="Click and type to change rank (Enter to save)"
+                                        style={{
+                                          width: "44px",
+                                          padding: "4px 6px",
+                                          border: "1.5px solid #cbd5e1",
+                                          borderRadius: "6px",
+                                          textAlign: "center",
+                                          fontWeight: "700",
+                                          color: "#0f172a",
+                                          fontSize: "0.84rem"
+                                        }}
+                                      />
+                                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuickMove(leader, -1, filteredLeaders)}
+                                          disabled={leaderIdx === 0}
+                                          title="Move Higher in Hierarchy"
+                                          style={{
+                                            background: "#f1f5f9",
+                                            border: "1px solid #cbd5e1",
+                                            borderRadius: "3px",
+                                            cursor: leaderIdx === 0 ? "not-allowed" : "pointer",
+                                            opacity: leaderIdx === 0 ? 0.3 : 1,
+                                            padding: "2px 5px",
+                                            lineHeight: "1",
+                                            fontSize: "0.65rem",
+                                            color: "#15803d"
+                                          }}
+                                        >
+                                          ▲
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuickMove(leader, 1, filteredLeaders)}
+                                          disabled={leaderIdx === filteredLeaders.length - 1}
+                                          title="Move Lower in Hierarchy"
+                                          style={{
+                                            background: "#f1f5f9",
+                                            border: "1px solid #cbd5e1",
+                                            borderRadius: "3px",
+                                            cursor: leaderIdx === filteredLeaders.length - 1 ? "not-allowed" : "pointer",
+                                            opacity: leaderIdx === filteredLeaders.length - 1 ? 0.3 : 1,
+                                            padding: "2px 5px",
+                                            lineHeight: "1",
+                                            fontSize: "0.65rem",
+                                            color: "#15803d"
+                                          }}
+                                        >
+                                          ▼
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </td>
                                   <td>
                                     <div style={{ display: "flex", gap: "8px" }}>
                                       <button onClick={() => openEditLeaderModal(leader)} className="action-btn" title="Edit Profile">
@@ -1762,6 +1958,140 @@ export default function BlogAdminDashboard() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* =====================================================================
+              MODAL: ARRANGE HIERARCHY & DISPLAY ORDER
+             ===================================================================== */}
+          {showHierarchyModal && (
+            <div className="modal-backdrop" onClick={() => setShowHierarchyModal(false)}>
+              <div className="student-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "680px" }}>
+                <div className="modal-header">
+                  <div>
+                    <h3>Arrange Leadership & Appointees Hierarchy</h3>
+                    <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                      Control the ranking order. Position #1 displays first at the top of the frontend leadership page.
+                    </p>
+                  </div>
+                  <button type="button" className="close-btn" onClick={() => setShowHierarchyModal(false)}>
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="modal-form-body">
+                  <div className="hierarchy-container">
+                    {/* Category tabs */}
+                    <div className="hierarchy-tabs">
+                      <button
+                        type="button"
+                        onClick={() => switchHierarchyCategory("appointees")}
+                        className={`hierarchy-tab-btn ${hierarchyCategory === "appointees" ? "active" : ""}`}
+                      >
+                        ⭐ Office Appointees ({leaders.filter(checkIsAppointee).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => switchHierarchyCategory("executives")}
+                        className={`hierarchy-tab-btn ${hierarchyCategory === "executives" ? "active" : ""}`}
+                      >
+                        Executive Leadership ({leaders.filter(checkIsExecutive).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => switchHierarchyCategory("statePros")}
+                        className={`hierarchy-tab-btn ${hierarchyCategory === "statePros" ? "active" : ""}`}
+                      >
+                        State JCC PROs ({leaders.filter(checkIsStatePro).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => switchHierarchyCategory("all")}
+                        className={`hierarchy-tab-btn ${hierarchyCategory === "all" ? "active" : ""}`}
+                      >
+                        All Members ({leaders.length})
+                      </button>
+                    </div>
+
+                    {/* Reorderable List */}
+                    <div className="hierarchy-list">
+                      {hierarchyList.length > 0 ? (
+                        hierarchyList.map((item, index) => {
+                          const photoSrc = item.photo || fallbackPhotoMap[item.fullName] || proImage;
+                          const isTop = index === 0;
+                          const isBottom = index === hierarchyList.length - 1;
+
+                          return (
+                            <div key={item._id} className={`hierarchy-item ${isTop ? "rank-first" : ""}`}>
+                              <div className="hierarchy-left">
+                                <span className={`hierarchy-rank-badge ${isTop ? "top-rank" : ""}`}>
+                                  #{index + 1}
+                                </span>
+                                <img
+                                  src={photoSrc}
+                                  alt={item.fullName}
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = nansLogo;
+                                  }}
+                                  className="hierarchy-item-photo"
+                                />
+                                <div className="hierarchy-item-text">
+                                  <span className="hierarchy-item-name">{item.fullName}</span>
+                                  <span className="hierarchy-item-pos">{item.position}</span>
+                                </div>
+                              </div>
+
+                              <div className="hierarchy-controls">
+                                <button
+                                  type="button"
+                                  onClick={() => moveHierarchyItem(index, -1)}
+                                  disabled={isTop}
+                                  className="hierarchy-btn"
+                                  title="Move Higher in Hierarchy"
+                                >
+                                  ▲
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveHierarchyItem(index, 1)}
+                                  disabled={isBottom}
+                                  className="hierarchy-btn"
+                                  title="Move Lower in Hierarchy"
+                                >
+                                  ▼
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                          No profiles found in this category.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-form-footer">
+                  <button
+                    type="button"
+                    className="cms-btn-secondary"
+                    onClick={() => setShowHierarchyModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="cms-btn-primary"
+                    disabled={hierarchySaving || hierarchyList.length === 0}
+                    onClick={saveHierarchyOrder}
+                  >
+                    {hierarchySaving ? "Saving Hierarchy..." : "Save Hierarchy Order"}
+                  </button>
+                </div>
               </div>
             </div>
           )}
